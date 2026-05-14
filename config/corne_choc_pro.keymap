@@ -23,12 +23,6 @@
 
         default_layer {
             display-name = "C-MAK";
-            
-            // --------------------------------------------------------------------------------
-            // |  TAB |  Q  |  W  |  E  |  R  |  T  |  C_MUTE | C_PP  |  Y  |  U   |  I  |  O  |  P  | BSPC |
-            // | CTRL |  A  |  S  |  D  |  F  |  G  |  LALT   |  RALT |  H  |  J   |  K  |  L  |  ;  |  '   |
-            // | SHFT |  Z  |  X  |  C  |  V  |  B  |                 |  N  |  M   |  ,  |  .  |  /  | ESC  |
-            //                    | GUI | LWR | SPC |                 | ENT | RSE  | ALT |
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮                 ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
                 &kp TAB       &kp Q         &kp W         &kp F         &kp P         &kp G         &trans &trans     &kp J         &kp L         &kp U         &kp Y         &kp SEMI      &kp BSPC
@@ -40,7 +34,6 @@
                                                           &kp LGUI      &mo 1         &kp SPACE                       &kp RET       &mo 2         &kp RALT
             //                                          ╰─────────────┴─────────────┴─────────────╯                 ╰─────────────┴─────────────┴─────────────╯
             >;
-            sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP &inc_dec_kp PG_UP PG_DN &inc_dec_kp C_PREV C_NEXT &inc_dec_kp C_BRI_DN C_BRI_UP>;
         };
 
         lower_layer {
@@ -55,12 +48,7 @@
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤                 ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
                                                          &kp LGUI       &trans        &kp SPACE                       &kp LGUI      &trans        &kp SPACE
             //                                          ╰─────────────┴─────────────┴─────────────╯                 ╰─────────────┴─────────────┴─────────────╯
-            //&kp TAB   &kp N1       &kp N2          &kp N3       &kp N4       &kp N5       &kp LCTRL &kp RCTRL &kp N6   &kp N7   &kp N8 &kp N9    &kp N0 &kp BSPC
-            //&kp LCTRL &bt BT_SEL 0 &bt BT_SEL 1    &bt BT_SEL 2 &bt BT_SEL 3 &bt BT_SEL 4 &kp LALT  &kp RALT  &kp LEFT &kp DOWN &kp UP &kp RIGHT &trans &trans
-            //&kp LSHFT &bt BT_CLR   &rgb_ug RGB_TOG &sys_reset   &bootloader  &studio_unlock                   &trans   &trans   &trans &trans    &trans &trans
-            //                                          &kp LGUI     &trans       &kp SPACE                        &kp LGUI &trans   &kp SPACE
             >;
-            sensor-bindings = <&inc_dec_kp PG_UP PG_DN>;
         };
 
         raise_layer {
