@@ -126,7 +126,7 @@ ZMK_MOD_MORPH(qmark_mr,
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
                 XXX           &hml LGUI A   &hml LALT R   &hml LCTRL S  &hml LSHFT T  &kp D         XXX XXX   &kp H         &hmr LSHFT N  &hmr LCTRL E  &hmr LALT I   &hmr LGUI O   XXX
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &comma_mr     &dot_mr       &kp qmark_mr  XXX  
+                XXX           &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &comma_mr     &dot_mr       &qmark_mr     XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            MEDIA         NAVIGATION    SYMBOL                  MOUSE         NUMBERS       FUNCTION
                                                           &tlt 1 ESC    &tlt 2 SPACE  &tlt 3 TAB              &tlt 4 RET    &tlt 5 BSPC   &tlt 6 DEL
