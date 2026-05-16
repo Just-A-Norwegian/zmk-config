@@ -56,12 +56,26 @@ ZMK_HOLD_TAP(tlt,
     bindings = <&mo>, <&kp>;
 )
 
-#define NAV_LEFT  &mt_home 0   LEFT  // Tap: left  | Long-tap: start of line.
-#define NAV_RIGHT &mt_end 0    RIGHT // Tap: right | Long-tap: end   of line.
+#define NAV_LEFT  &mt HOME     LEFT  // Tap: left  | Long-tap: start of line.
+#define NAV_RIGHT &mt END      RIGHT // Tap: right | Long-tap: end   of line.
 #define NAV_UP    &mt LC(HOME) UP    // Tap: up    | Long-tap: start of doc.
 #define NAV_DOWN  &mt LC(END)  DOWN  // Tap: down  | Long-tap: end   of doc.
 #define NAV_BSPC  &mt LC(BSPC) BSPC  // Tap: bspc  | Long-tap: delete word bwd.
 #define NAV_DEL   &mt LC(DEL)  DEL   // Tap: del   | Long-tap: delete word fwd.
+
+/* Mod-morphs: shifted variants that differ from standard shift output */
+ZMK_MOD_MORPH(comma_mr,
+    bindings = <&kp COMMA>, <&kp SEMI>;
+    mods = <(MOD_LSFT|MOD_RSFT)>;
+)
+ZMK_MOD_MORPH(dot_mr,
+    bindings = <&kp DOT>, <&kp COLON>;
+    mods = <(MOD_LSFT|MOD_RSFT)>;
+)
+ZMK_MOD_MORPH(qmark_mr,
+    bindings = <&kp QMARK>, <&kp EXCL>;
+    mods = <(MOD_LSFT|MOD_RSFT)>;
+)
 
 / {
     chosen {
@@ -85,10 +99,18 @@ ZMK_HOLD_TAP(tlt,
         // Top-row adjacent pairs — positions from the 46-key map above
         // Left side:  2=W  3=F  4=P
         // Right side: 9=L  10=U  11=Y
-        combo_esc  { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <2 3>;   bindings = <&kp ESC>;  };
-        combo_tab  { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <3 4>;   bindings = <&kp TAB>;  };
-        combo_bspc { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <9 10>;  bindings = <&kp BSPC>; };
-        combo_del  { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <10 11>; bindings = <&kp DEL>;  };
+        combo_rbkt { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <2 3>;   bindings = <&kp RBKT>; };
+        combo_lbkt { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <3 4>;   bindings = <&kp LBKT>; };
+        
+        combo_rbrc { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <30 31>;   bindings = <&kp RBRC>; };
+        combo_lbrc { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <31 32>;   bindings = <&kp LBRC>; };
+        
+        combo_lpar { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <9 10>;  bindings = <&kp LPAR>; };
+        combo_rpar { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <10 11>; bindings = <&kp RPAR>; };
+        
+        combo_lt   { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <35 36>; bindings = <&kp LT>; };
+        combo_gt   { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <36 37>; bindings = <&kp GT>; };
+        
     };
 };
 
@@ -100,20 +122,19 @@ ZMK_HOLD_TAP(tlt,
             display-name = "C-MAK";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                XXX           &kp Q         &kp W         &kp F         &kp P         &kp G         XXX XXX   &kp J         &kp L         &kp U         &kp Y         &kp SEMI      XXX  
+                XXX           &kp Q         &kp W         &kp F         &kp P         &kp G         XXX XXX   &kp J         &kp L         &kp U         &kp Y         &kp SQT       XXX  
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &hml LGUI A   &hml LALT R   &hml LCTRL S  &hml LSHFT T  &kp D         XXX XXX   &kp H         &hmr LSHFT N  &hmr LCTRL E  &hmr LALT I   &hmr LGUI O   &kp SQT
+                XXX           &hml LGUI A   &hml LALT R   &hml LCTRL S  &hml LSHFT T  &kp D         XXX XXX   &kp H         &hmr LSHFT N  &hmr LCTRL E  &hmr LALT I   &hmr LGUI O   XXX
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &kp COMMA     &kp DOT       &kp FSLH      XXX  
+                XXX           &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &comma_mr     &dot_mr       &kp qmark_mr  XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
-            //                                            MEDIA         NAVIGATION    MOUSE                   SYMBOL        NUMBERS       FUNCTION
+            //                                            MEDIA         NAVIGATION    SYMBOL                  MOUSE         NUMBERS       FUNCTION
                                                           &tlt 1 ESC    &tlt 2 SPACE  &tlt 3 TAB              &tlt 4 RET    &tlt 5 BSPC   &tlt 6 DEL
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
 
         // - RIGHT LAYERS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        
         lower_layer {
             display-name = "MEDIA";
             bindings = <
@@ -133,9 +154,9 @@ ZMK_HOLD_TAP(tlt,
             display-name = "NAV";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                ___           ___           ___           ___           ___           ___           XXX XXX   &kp PG_UP     &kp BSPC      &kp UP        &kp DEL       ___           ___   
+                ___           ___           ___           ___           ___           ___           XXX XXX   &kp PG_UP     NAV_BSPC      NAV_UP        NAV_DEL       ___           ___   
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                ___           &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     ___           XXX XXX   &kp PG_DN     &kp LEFT      &kp DOWN      &kp RIGHT     &kp RET       ___   
+                ___           &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     ___           XXX XXX   &kp PG_DN     NAV_LEFT      NAV_DOWN      NAV_RIGHT     &kp RET       ___   
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
                 ___           ___           ___           ___           ___           ___                     &kp INS       &kp TAB       ___           ___           ___           ___   
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
@@ -144,38 +165,37 @@ ZMK_HOLD_TAP(tlt,
             >;
         };
 
-        // ################################ NOT FINISHED ################################
         extra_layer_1 {
-            display-name = "MOUSE";
+            display-name = "SYMBOL";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                ___           ___           ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           ___           ___   
+                ___           ___           ___           ___           ___           ___           XXX XXX   &kp PRCNT     &kp AT        &kp HASH      &kp DLLR      &kp GRAVE     ___   
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                ___           &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     ___           XXX XXX   ___           ___           ___           ___           ___           ___   
+                ___           &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     ___           XXX XXX   &kp ASTRK     &kp EQUAL     &kp MINUS     &kp FSLH      $kp AMPS      ___
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                ___           ___           ___           ___           ___           ___                     ___           ___           ___           ___           ___           ___   
+                ___           ___           ___           ___           ___           ___                     &kp CARET     &kp PLUS      &kp UNDER     &kp BSLH      &kp PIPE      ___   
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
                                                           ___           ___           ___                     ___           ___           ___   
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
-            >;
+           >;
         };
 
         // - LEFT LAYERS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
         // ################################ NOT FINISHED ################################
         extra_layer_2 {
-            display-name = "SYMBOL";
+            display-name = "MOUSE";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                ___           &kp EXCL      &kp AT        &kp HASH      &kp DLLR      &kp PRCNT     XXX XXX   &kp CARET     &kp AMPS      &kp ASTRK     &kp LPAR      &kp RPAR      ___   
+                ___           ___           ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           ___           ___   
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                ___           ___           ___           ___           ___           ___           XXX XXX   &kp MINUS     &kp EQUAL     &kp LBKT      &kp RBKT      &kp BSLH      ___   
+                ___           ___           ___           ___           ___           ___           XXX XXX   ___           &kp RSHFT     &kp RCTRL     &kp RALT      &kp RGUI      ___   
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                ___           ___           ___           ___           ___           ___                     &kp UNDER     &kp PLUS      &kp LBRC      &kp RBRC      &kp PIPE      ___   
+                ___           ___           ___           ___           ___           ___                     ___           ___           ___           ___           ___           ___   
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
                                                           ___           ___           ___                     ___           ___           ___   
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
-           >;
+            >;
         };
 
         extra_layer_3 {
