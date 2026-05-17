@@ -78,8 +78,16 @@ ZMK_MOD_MORPH(qmark_mr,
     mods = <(MOD_LSFT|MOD_RSFT)>;
 )
 
-/* Unicode characters */
-ZMK_UNICODE_SINGLE(euro, N2, N0, A, C)  // € U+20AC
+/* Euro sign via Windows Alt+numpad (Alt+0128) — works without WinCompose */
+ZMK_MACRO(euro,
+    bindings
+        = <&macro_press &kp LALT>
+        , <&macro_tap &kp KP_N0>
+        , <&macro_tap &kp KP_N1>
+        , <&macro_tap &kp KP_N2>
+        , <&macro_tap &kp KP_N8>
+        , <&macro_release &kp LALT>;
+)
 
 /* Dollar / Euro mod-morph: tap = $, Shift + tap = € */
 ZMK_MOD_MORPH(dllr_mr,
