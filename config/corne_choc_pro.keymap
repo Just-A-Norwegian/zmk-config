@@ -140,6 +140,16 @@ ZMK_HOLD_TAP(magic_shift,
 };
 
 / {
+    behaviors {
+        /* Release sticky-shift on the first key PRESS (not release), so that
+         * fast/rolling typing does not bleed shift into subsequent letters. */
+        sk: sticky_key {
+            quick-release;
+        };
+    };
+};
+
+/ {
     conditional_layers {
         compatible = "zmk,conditional-layers";
         system_layer {
@@ -194,14 +204,7 @@ ZMK_HOLD_TAP(magic_shift,
         };
 
         // - RIGHT LAYERS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        // Maybe replace this with smart shift in the future, integrate layer into NAV layer if needed
-        // If held it will work like a normal shift button.
-        // If tapped, it will automatically capitalize the next alpha character
-        // If double tapped, it will stay capitalized until you hit a whitespace character
 
-
-        // - LEFT LAYERS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-       
         lower_layer {
             display-name = "NAV";
             bindings = <
