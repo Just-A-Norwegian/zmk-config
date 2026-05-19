@@ -355,14 +355,14 @@ ZMK_HOLD_TAP(magic_shift,
             display-name = "GAMING";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                XXX           &kp TAB       &kp Q         &kp W         &kp E         &kp R         XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
+                &kp ESC       &kp TAB       &kp Q         &kp W         &kp E         &kp R         XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp SHIFT     &kp A         &kp S         &kp D         &kp F         XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
+                XXX           &kp LSHFT     &kp A         &kp S         &kp D         &kp F         XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp CTRL      &kp Z         &kp X         &kp C         &kp V                   XXX           XXX           XXX           XXX           XXX           XXX  
+                XXX           &kp LCTRL     &kp Z         &kp X         &kp C         &kp V                   XXX           XXX           XXX           XXX           XXX           XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            MAGIC SHIFT   NAVIGATION    MEDIA                   SYMBOL        
-                                                          &kp SHIFT     &kp SPACE     &tlt 4 RET              &tlt 5 TAB    XXX           XXX
+                                                          &kp TAB       &kp SPACE     &tlt 4 RET              &tlt 5 TAB    XXX           XXX
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
@@ -384,10 +384,6 @@ ZMK_HOLD_TAP(magic_shift,
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰────────────────┴────────────────┴────────────────╯
             >;
         };
-
-        // - GAMING LAYER --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        // (mostly normal querty layout but shifter over by one row, also juts left side of keyboard is needed)
-
      
     };
 };
