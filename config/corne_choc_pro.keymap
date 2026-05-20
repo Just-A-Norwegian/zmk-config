@@ -153,13 +153,7 @@ ZMK_MOD_MORPH(dllr_mr,
  * - Shift + tap / double-tap : caps-word
  * - Hold             : regular shift */
 ZMK_ADAPTIVE_KEY(
-    shift_repeat, bindings = <&sk LSHFT>;
-    repeat {
-        trigger-keys = <A B C D E F G H I J K L M N O P Q R S T U V W X Y Z>;
-        bindings = <&key_repeat>;
-        max-prior-idle-ms = <1200>;
-        strict-modifiers;
-    };)
+    shift_repeat, bindings = <&sk LSHFT>;)
 ZMK_MOD_MORPH(magic_shift_tap,
     bindings = <&shift_repeat>, <&caps_word>;
     mods = <(MOD_LSFT)>;
@@ -247,8 +241,8 @@ ZMK_HOLD_TAP(magic_shift,
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
                 XXX           &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &comma_mr     &dot_mr       &qmark_mr     XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
-            //                                            MAGIC SHIFT   NAVIGATION    MEDIA                   SYMBOL        NUMBERS       FUNCTION
-                                                   &magic_shift LSHFT 0 &tlt 3 SPACE  &tlt 4 RET              &tlt 5 TAB    &tlt_bspc 6 0   &magic_shift LSHFT 0
+            //                                            MAGIC SHIFT   NAVIGATION    SYMBOL                  MEDIA         NUMBERS       FUNCTION
+                                                   &magic_shift LSHFT 0 &tlt 3 SPACE  &tlt 5 TAB              &tlt 4 RET    &tlt_bspc 6 0 &magic_shift LSHFT 0
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
@@ -265,7 +259,7 @@ ZMK_HOLD_TAP(magic_shift,
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
                 &kp NB_AE     ___           ___           ___           ___           ___                     ___           ___           &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  ___
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
-                                                          ___           ___           ___                     &tlt 2 TAB    ___           ___
+                                                          ___           ___           &tlt 2 TAB              ___           ___           ___
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
@@ -361,8 +355,8 @@ ZMK_HOLD_TAP(magic_shift,
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
                 XXX           &kp LCTRL     &kp Z         &kp X         &kp C         &kp V                   XXX           XXX           XXX           XXX           XXX           XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
-            //                                            MAGIC SHIFT   NAVIGATION    MEDIA                   SYMBOL        
-                                                          &kp TAB       &kp SPACE     &tlt 4 RET              &tlt 5 TAB    XXX           XXX
+            //                                            MAGIC SHIFT   NAVIGATION    SYMBOL                  MEDIA        
+                                                          &kp TAB       &kp SPACE     &tlt 5 TAB              &tlt 4 RET    XXX           XXX
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
@@ -387,10 +381,3 @@ ZMK_HOLD_TAP(magic_shift,
      
     };
 };
-
-/*
-Ideas for the future,
-
-Remove feature where tapping shift after and alpha key repeats it?
-
-*/
