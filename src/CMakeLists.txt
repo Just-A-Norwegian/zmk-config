@@ -1,0 +1,1 @@
+zephyr_library_sources(nb_layer_persist.c)

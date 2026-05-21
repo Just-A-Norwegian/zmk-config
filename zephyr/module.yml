@@ -1,3 +1,4 @@
 build:
+  cmake: src
   settings:
     board_root: .
