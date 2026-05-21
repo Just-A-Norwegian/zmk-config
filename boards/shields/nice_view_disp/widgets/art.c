@@ -402,7 +402,7 @@ const lv_img_dsc_t mountain = {
 #define LV_ATTRIBUTE_IMG_DITHERING_EFFECT
 #endif
 
-const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_UNTITLED7 uint8_t dithering_effect[] = {
+const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_DITHERING_EFFECT uint8_t dithering_effect_map[] = {
   0xff, 0xff, 0xff, 0xff, 	/*Color of index 0*/
   0x00, 0x00, 0x00, 0xff, 	/*Color of index 1*/
 
@@ -482,6 +482,6 @@ const lv_img_dsc_t dithering_effect = {
     .header.reserved = 0,
     .header.w = 140,
     .header.h = 68,
-    .data_size = 1268,
+    .data_size = 1232,
     .data = dithering_effect_map,
 };
