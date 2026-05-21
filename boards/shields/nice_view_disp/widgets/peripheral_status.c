@@ -125,7 +125,7 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
 
     lv_obj_t *art = lv_img_create(widget->obj);
     static const lv_img_dsc_t *images[] = {&balloon, &mountain, &dithering_effect};
-    lv_img_set_src(art, images[2]); /* TEMP: force dithering_effect for testing */
+    lv_img_set_src(art, images[sys_rand32_get() % 3]);
     lv_obj_align(art, LV_ALIGN_TOP_LEFT, art_pos, 0);
 
     sys_slist_append(&widgets, &widget->node);
