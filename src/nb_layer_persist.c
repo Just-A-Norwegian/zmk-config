@@ -1,13 +1,14 @@
 /*
- * nb_layer_persist.c
+ * layout_persist.c  (nb_layer_persist.c)
  *
- * Saves the Norwegian layer (layer 1) toggle state to NVS so it survives power
- * cycles.  No keymap changes are needed — &tog 1 continues to work exactly as
- * before.  This file simply:
+ * Saves the active layout (ENG-US / NOR-NB / Colemak) across power cycles
+ * using Zephyr NVS settings.
  *
- *   1. On boot  : reads the saved value; if it was on, activates layer 1.
- *   2. On change: whenever layer 1 is activated or deactivated, writes the new
- *                 state to NVS.
+ *   1. On boot  : reads the saved layout; activates the matching overlay layer.
+ *   2. On change: whenever layer 1 (NOR-NB) or layer 9 (Colemak) changes,
+ *                 recomputes the current layout and writes it to NVS.
+ *
+ * Settings key: "layout/mode"  (uint8_t, see enum layout_mode below)
  */
 
 #include <zephyr/logging/log.h>
@@ -20,59 +21,110 @@
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #define NB_LAYER 1
+#define COLEMAK_LAYER 9
+
+enum layout_mode
+{
+    LAYOUT_ENG_US = 0,
+    LAYOUT_NOR_NB = 1,
+    LAYOUT_COLEMAK = 2,
+};
 
 #if IS_ENABLED(CONFIG_SETTINGS)
 
-/* ── Settings: restore saved state on boot ──────────────────────────────── */
+/* ── Settings: restore saved layout on boot ─────────────────────────────── */
 
-static int nb_layer_load_cb(const char *name, size_t len, settings_read_cb read_cb,
-                            void *cb_arg)
+static enum layout_mode saved_mode = LAYOUT_ENG_US;
+static bool nb_active = false;
+static bool colemak_active = false;
+
+static int layout_load_cb(const char *name, size_t len, settings_read_cb read_cb,
+                          void *cb_arg)
 {
     const char *next;
-    if (!settings_name_steq(name, "on", &next) || next)
+    if (!settings_name_steq(name, "mode", &next) || next)
     {
         return -ENOENT;
     }
 
-    bool active;
-    if (len != sizeof(active))
+    uint8_t mode;
+    if (len != sizeof(mode))
     {
         return -EINVAL;
     }
 
-    int rc = read_cb(cb_arg, &active, sizeof(active));
+    int rc = read_cb(cb_arg, &mode, sizeof(mode));
     if (rc < 0)
     {
         return rc;
     }
 
-    if (active)
+    saved_mode = (enum layout_mode)mode;
+    switch (saved_mode)
     {
+    case LAYOUT_NOR_NB:
         zmk_keymap_layer_activate(NB_LAYER);
+        nb_active = true;
+        break;
+    case LAYOUT_COLEMAK:
+        zmk_keymap_layer_activate(COLEMAK_LAYER);
+        colemak_active = true;
+        break;
+    default:
+        break; /* LAYOUT_ENG_US: layer 0 is always the base, nothing to do */
     }
 
     return 0;
 }
 
-SETTINGS_STATIC_HANDLER_DEFINE(nb_layer_persist, "nb_layer", NULL, nb_layer_load_cb, NULL, NULL);
+SETTINGS_STATIC_HANDLER_DEFINE(layout_persist, "layout", NULL, layout_load_cb, NULL, NULL);
 
-/* ── Event listener: save state whenever layer 1 changes ────────────────── */
+/* ── Event listener: save layout whenever NB or Colemak layer changes ────── */
 
-static int nb_layer_listener(const zmk_event_t *eh)
+static int layout_listener(const zmk_event_t *eh)
 {
     const struct zmk_layer_state_changed *ev = as_zmk_layer_state_changed(eh);
-    if (ev == NULL || ev->layer != NB_LAYER)
+    if (ev == NULL || (ev->layer != NB_LAYER && ev->layer != COLEMAK_LAYER))
     {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    bool active = ev->state;
-    settings_save_one("nb_layer/on", &active, sizeof(active));
+    /* Update our local shadow of each overlay's active state. */
+    if (ev->layer == NB_LAYER)
+    {
+        nb_active = ev->state;
+    }
+    else
+    {
+        colemak_active = ev->state;
+    }
+
+    /* Determine the current layout from the shadow state. */
+    enum layout_mode mode;
+    if (nb_active)
+    {
+        mode = LAYOUT_NOR_NB;
+    }
+    else if (colemak_active)
+    {
+        mode = LAYOUT_COLEMAK;
+    }
+    else
+    {
+        mode = LAYOUT_ENG_US;
+    }
+
+    if (mode != saved_mode)
+    {
+        saved_mode = mode;
+        uint8_t val = (uint8_t)mode;
+        settings_save_one("layout/mode", &val, sizeof(val));
+    }
 
     return ZMK_EV_EVENT_BUBBLE;
 }
 
-ZMK_LISTENER(nb_layer_persist, nb_layer_listener);
-ZMK_SUBSCRIPTION(nb_layer_persist, zmk_layer_state_changed);
+ZMK_LISTENER(layout_persist, layout_listener);
+ZMK_SUBSCRIPTION(layout_persist, zmk_layer_state_changed);
 
 #endif /* IS_ENABLED(CONFIG_SETTINGS) */
