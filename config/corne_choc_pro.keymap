@@ -231,7 +231,7 @@ ZMK_HOLD_TAP(magic_shift,
         
     };
 };
-,,,
+
 / {
     keymap {
         compatible = "zmk,keymap";
