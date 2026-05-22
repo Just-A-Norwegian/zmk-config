@@ -144,7 +144,7 @@ ZMK_MACRO(euro,
 /* Layout switch macros — &to 0 clears all overlays, then &tog N activates the desired overlay */
 ZMK_MACRO(sw_eng_us, bindings = <&to 0>;)
 ZMK_MACRO(sw_nb,      bindings = <&to 0 &tog 1>;)
-ZMK_MACRO(sw_colemak, bindings = <&to 0 &tog 9>;)
+ZMK_MACRO(sw_colemak, bindings = <&to 0 &tog 2>;)
 
 /* Dollar / Euro mod-morph: tap = $, Shift + tap = € */
 ZMK_MOD_MORPH(dllr_mr,

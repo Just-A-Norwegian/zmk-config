@@ -21,7 +21,7 @@
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #define NB_LAYER 1
-#define COLEMAK_LAYER 9
+#define COLEMAK_LAYER 2
 
 enum layout_mode
 {
