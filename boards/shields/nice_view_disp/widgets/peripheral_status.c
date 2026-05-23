@@ -25,8 +25,14 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 LV_IMG_DECLARE(balloon);
 LV_IMG_DECLARE(mountain);
+LV_IMG_DECLARE(black);
+LV_IMG_DECLARE(blonde);
 LV_IMG_DECLARE(boy1);
 LV_IMG_DECLARE(boy2);
+LV_IMG_DECLARE(bush);
+LV_IMG_DECLARE(luigi);
+LV_IMG_DECLARE(mask);
+LV_IMG_DECLARE(pink);
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -125,8 +131,8 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     lv_canvas_set_buffer(top, widget->cbuf, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
 
     lv_obj_t *art = lv_img_create(widget->obj);
-    static const lv_img_dsc_t *images[] = {&balloon, &mountain, &boy1, &boy2};
-    lv_img_set_src(art, images[sys_rand32_get() % 4]);
+    static const lv_img_dsc_t *images[] = {&balloon, &mountain, &black, &blonde, &boy1, &boy2, &bush, &luigi, &mask, &pink};
+    lv_img_set_src(art, images[sys_rand32_get() % 10]);
     lv_obj_align(art, LV_ALIGN_TOP_LEFT, art_pos, 0);
 
     sys_slist_append(&widgets, &widget->node);
