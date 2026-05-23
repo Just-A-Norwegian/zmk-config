@@ -121,6 +121,9 @@ ZMK_SUBSCRIPTION(widget_peripheral_status, zmk_split_peripheral_status_changed);
 static const lv_img_dsc_t *images[] = {
     &balloon, &mountain, &black, &blonde, &boy1, &boy2, &bush, &luigi, &mask, &pink
 };
+static const lv_img_dsc_t *sfw_images[] = {
+    &balloon, &mountain, &black, &blonde, &boy1, &boy2, &bush, &luigi, &mask, &pink
+};
 static uint8_t  art_idx;
 static lv_obj_t *art_obj;
 
@@ -129,13 +132,8 @@ static void art_timer_cb(lv_timer_t *timer) {
     lv_img_set_src(art_obj, images[art_idx]);
 }
 
-#ifdef CONFIG_NICE_VIEW_DISP_ROTATE_180 // sets positions for default and flipped canvases
-int art_pos = 20;
-int top_pos = 0;
-#else
 int art_pos = 0;
 int top_pos = 92;
-#endif
 
 int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
@@ -146,7 +144,7 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
 
     art_idx = sys_rand32_get() % ART_COUNT;
     art_obj = lv_img_create(widget->obj);
-    lv_img_set_src(art_obj, images[art_idx]);
+    lv_img_set_src(art_obj, sfw_images[art_idx]);
     lv_obj_align(art_obj, LV_ALIGN_TOP_LEFT, art_pos, 0);
     lv_timer_create(art_timer_cb, ART_CYCLE_MS, NULL);
 
