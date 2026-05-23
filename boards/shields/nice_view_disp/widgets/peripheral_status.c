@@ -125,7 +125,7 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     lv_canvas_set_buffer(top, widget->cbuf, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
 
     lv_obj_t *art = lv_img_create(widget->obj);
-    static const lv_img_dsc_t *images[] = {&balloon, &mountain, &dithering_effect, &boy2};
+    static const lv_img_dsc_t *images[] = {&balloon, &mountain, &boy1, &boy2};
     lv_img_set_src(art, images[sys_rand32_get() % 4]);
     lv_obj_align(art, LV_ALIGN_TOP_LEFT, art_pos, 0);
 
