@@ -120,7 +120,7 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_peripheral_status, struct peripheral_status_s
                             output_status_update_cb, get_state)
 ZMK_SUBSCRIPTION(widget_peripheral_status, zmk_split_peripheral_status_changed);
 
-#define ART_COUNT    10
+#define ART_COUNT    15
 #define ART_CYCLE_MS 30000
 
 static const lv_img_dsc_t *nsfw_images[] = {
