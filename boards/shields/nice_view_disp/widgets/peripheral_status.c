@@ -30,9 +30,14 @@ LV_IMG_DECLARE(blonde);
 LV_IMG_DECLARE(boy1);
 LV_IMG_DECLARE(boy2);
 LV_IMG_DECLARE(bush);
+LV_IMG_DECLARE(ginger);
 LV_IMG_DECLARE(luigi);
 LV_IMG_DECLARE(mask);
 LV_IMG_DECLARE(pink);
+LV_IMG_DECLARE(shower);
+LV_IMG_DECLARE(skinny);
+LV_IMG_DECLARE(spread);
+LV_IMG_DECLARE(toy);
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -118,18 +123,18 @@ ZMK_SUBSCRIPTION(widget_peripheral_status, zmk_split_peripheral_status_changed);
 #define ART_COUNT    10
 #define ART_CYCLE_MS 30000
 
-static const lv_img_dsc_t *images[] = {
-    &balloon, &mountain, &black, &blonde, &boy1, &boy2, &bush, &luigi, &mask, &pink
+static const lv_img_dsc_t *nsfw_images[] = {
+    &balloon, &mountain, &black, &blonde, &boy1, &boy2, &bush, &ginger, &luigi, &mask, &pink, &shower, &skinny, &spread, &toy
 };
 static const lv_img_dsc_t *sfw_images[] = {
-    &balloon, &mountain, &black, &blonde, &boy1, &boy2, &bush, &luigi, &mask, &pink
+    &balloon, &mountain
 };
 static uint8_t  art_idx;
 static lv_obj_t *art_obj;
 
 static void art_timer_cb(lv_timer_t *timer) {
     art_idx = (art_idx + 1) % ART_COUNT;
-    lv_img_set_src(art_obj, images[art_idx]);
+    lv_img_set_src(art_obj, nsfw_images[art_idx]);
 }
 
 int art_pos = 0;
@@ -144,7 +149,7 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
 
     art_idx = sys_rand32_get() % ART_COUNT;
     art_obj = lv_img_create(widget->obj);
-    lv_img_set_src(art_obj, sfw_images[art_idx]);
+    lv_img_set_src(art_obj, nsfw_images[art_idx]);
     lv_obj_align(art_obj, LV_ALIGN_TOP_LEFT, art_pos, 0);
     lv_timer_create(art_timer_cb, ART_CYCLE_MS, NULL);
 
