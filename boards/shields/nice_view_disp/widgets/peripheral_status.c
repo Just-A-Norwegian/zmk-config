@@ -20,6 +20,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/events/split_peripheral_status_changed.h>
 #include <zmk/usb.h>
 #include <zmk/ble.h>
+#include <zmk/events/position_state_changed.h>
 
 #include "peripheral_status.h"
 
@@ -123,23 +124,70 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_peripheral_status, struct peripheral_status_s
                             output_status_update_cb, get_state)
 ZMK_SUBSCRIPTION(widget_peripheral_status, zmk_split_peripheral_status_changed);
 
-#define NSFW_ART_COUNT    16
-#define SFW_ART_COUNT     2
+typedef struct {
+    const lv_img_dsc_t **images;
+    uint8_t              count;
+} art_album_t;
+
+static const lv_img_dsc_t *album_sfw[]  = { &balloon, &mountain };
+static const lv_img_dsc_t *album_nsfw[] = {
+    &black, &blonde, &boy1, &boy2, &bush, &crete, &ginger, &luigi,
+    &mask, &nurse, &pink, &shower, &skinny, &spread, &squirtle, &toy
+};
+static const art_album_t albums[] = {
+    { album_sfw,  ARRAY_SIZE(album_sfw)  },
+    { album_nsfw, ARRAY_SIZE(album_nsfw) },
+};
+#define ALBUM_COUNT  ARRAY_SIZE(albums)
 #define ART_CYCLE_MS 30000
 
-static const lv_img_dsc_t *nsfw_images[] = {
-    &black, &blonde, &boy1, &boy2, &bush, &crete, &ginger, &luigi, &mask, &nurse, &pink, &shower, &skinny, &spread, &squirtle, &toy
-};
-static const lv_img_dsc_t *sfw_images[] = {
-    &balloon, &mountain
-};
-static uint8_t  art_idx;
-static lv_obj_t *art_obj;
+static uint8_t     album_idx  = 0;
+static uint8_t     image_idx  = 0;
+static bool        auto_loop  = true;
+static lv_timer_t *loop_timer = NULL;
+static lv_obj_t   *art_obj    = NULL;
+
+static void show_current_cb(void *_) {
+    lv_img_set_src(art_obj, albums[album_idx].images[image_idx]);
+}
+static void show_current(void) { lv_async_call(show_current_cb, NULL); }
 
 static void art_timer_cb(lv_timer_t *timer) {
-    art_idx = (art_idx + 1) % NSFW_ART_COUNT;
-    lv_img_set_src(art_obj, nsfw_images[art_idx]);
+    image_idx = (image_idx + 1) % albums[album_idx].count;
+    lv_img_set_src(art_obj, albums[album_idx].images[image_idx]);
 }
+
+static void art_next_image(void) {
+    image_idx = (image_idx + 1) % albums[album_idx].count;
+    show_current();
+}
+static void art_next_album(void) {
+    album_idx = (album_idx + 1) % ALBUM_COUNT;
+    image_idx = 0;
+    show_current();
+}
+static void art_toggle_loop(void) {
+    auto_loop = !auto_loop;
+    if (auto_loop) lv_timer_resume(loop_timer);
+    else           lv_timer_pause(loop_timer);
+}
+
+#define ART_KEY_NEXT_IMAGE   13
+#define ART_KEY_TOGGLE_LOOP  27
+#define ART_KEY_NEXT_ALBUM   39
+
+static int art_key_handler(const zmk_event_t *eh) {
+    const struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
+    if (!ev || !ev->state) return ZMK_EV_EVENT_BUBBLE;
+    switch (ev->position) {
+        case ART_KEY_NEXT_IMAGE:  art_next_image();  break;
+        case ART_KEY_TOGGLE_LOOP: art_toggle_loop(); break;
+        case ART_KEY_NEXT_ALBUM:  art_next_album();  break;
+    }
+    return ZMK_EV_EVENT_BUBBLE;
+}
+ZMK_LISTENER(art_key_ctrl, art_key_handler);
+ZMK_SUBSCRIPTION(art_key_ctrl, zmk_position_state_changed);
 
 int art_pos = 0;
 int top_pos = 92;
@@ -151,11 +199,11 @@ int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     lv_obj_align(top, LV_ALIGN_TOP_LEFT, top_pos, 0);
     lv_canvas_set_buffer(top, widget->cbuf, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
 
-    art_idx = sys_rand32_get() % NSFW_ART_COUNT;
+    image_idx = sys_rand32_get() % albums[album_idx].count;
     art_obj = lv_img_create(widget->obj);
-    lv_img_set_src(art_obj, nsfw_images[art_idx]);
+    lv_img_set_src(art_obj, albums[album_idx].images[image_idx]);
     lv_obj_align(art_obj, LV_ALIGN_TOP_LEFT, art_pos, 0);
-    lv_timer_create(art_timer_cb, ART_CYCLE_MS, NULL);
+    loop_timer = lv_timer_create(art_timer_cb, ART_CYCLE_MS, NULL);
 
     sys_slist_append(&widgets, &widget->node);
     widget_battery_status_init();
