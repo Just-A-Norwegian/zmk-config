@@ -26,19 +26,26 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 LV_IMG_DECLARE(balloon);
 LV_IMG_DECLARE(mountain);
+
+LV_IMG_DECLARE(abs);
+LV_IMG_DECLARE(back);
 LV_IMG_DECLARE(black);
 LV_IMG_DECLARE(blonde);
 LV_IMG_DECLARE(boy1);
 LV_IMG_DECLARE(boy2);
+LV_IMG_DECLARE(brazil);
 LV_IMG_DECLARE(bush);
 LV_IMG_DECLARE(crete);
 LV_IMG_DECLARE(ginger);
+LV_IMG_DECLARE(lean);
 LV_IMG_DECLARE(luigi);
 LV_IMG_DECLARE(mask);
 LV_IMG_DECLARE(nurse);
 LV_IMG_DECLARE(pink);
+LV_IMG_DECLARE(show);
 LV_IMG_DECLARE(shower);
 LV_IMG_DECLARE(skinny);
+LV_IMG_DECLARE(skirt);
 LV_IMG_DECLARE(spread);
 LV_IMG_DECLARE(squirtle);
 LV_IMG_DECLARE(toy);
@@ -131,8 +138,8 @@ typedef struct {
 
 static const lv_img_dsc_t *album_sfw[]  = { &balloon, &mountain };
 static const lv_img_dsc_t *album_nsfw[] = {
-    &black, &blonde, &boy1, &boy2, &bush, &crete, &ginger, &luigi,
-    &mask, &nurse, &pink, &shower, &skinny, &spread, &squirtle, &toy
+    &abs, &back, &black, &blonde, &boy1, &boy2, &brazil, &bush, &crete, &ginger, &lean, &luigi,
+    &mask, &nurse, &pink, &show, &shower, &skinny, &skirt, &spread, &squirtle, &toy
 };
 static const art_album_t albums[] = {
     { album_sfw,  ARRAY_SIZE(album_sfw)  },
