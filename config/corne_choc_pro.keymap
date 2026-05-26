@@ -247,7 +247,7 @@ ZMK_HOLD_TAP(magic_shift,
                 XXX           &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &comma_mr     &dot_mr       &qmark_mr     XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            MAGIC SHIFT   NAVIGATION    FUNCTION                SYMBOL        NUMBERS       MAGIC SHIFT
-                                                   &magic_shift LSHFT 0 &tlt 3 SPACE  &tlt 4 TAB              &tlt 5 RET    &tlt_bspc 7 0 &magic_shift LSHFT 0
+                                                   &magic_shift LSHFT 0 &tlt 3 SPACE  &tlt 4 TAB              &tlt 5 RET    &tlt_bspc 7 0 &kp DEL
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
