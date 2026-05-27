@@ -25,6 +25,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/keymap.h>
 #include <zmk/hid.h>
 #include <zmk/events/keycode_state_changed.h>
+#include <zmk/caps_word.h>
+#include <zmk/events/caps_word_state_changed.h>
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -32,6 +34,8 @@ LV_IMG_DECLARE(Shift);
 LV_IMG_DECLARE(Ctrl);
 LV_IMG_DECLARE(Alt);
 LV_IMG_DECLARE(Gui);
+LV_IMG_DECLARE(Cap_word);
+LV_IMG_DECLARE(Cap_lock);
 
 struct output_status_state
 {
@@ -50,6 +54,8 @@ struct layer_status_state
 struct modifier_status_state
 {
     uint8_t mods;
+    bool caps_word_active;
+    bool caps_lock_active;
 };
 
 static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state)
@@ -107,7 +113,35 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     lv_draw_img_dsc_t img_dsc;
     lv_draw_img_dsc_init(&img_dsc);
 
-    for (int i = 0; i < 4; i++)
+    /* Draw Shift cell (index 0) with three states: caps-lock, caps-word, or normal shift */
+    {
+        const lv_img_dsc_t *sym;
+        bool highlight;
+        if (state->caps_lock_active) {
+            sym = &Cap_lock;
+            highlight = true;
+        } else if (state->caps_word_active) {
+            sym = &Cap_word;
+            highlight = true;
+        } else {
+            sym = &Shift;
+            highlight = (state->mods >> 0) & 1;
+        }
+        if (highlight) {
+            lv_canvas_draw_rect(canvas, mod_cx[0], mod_cy[0], 34, 21, &rect_white_dsc);
+            memcpy(active_sym_buf,     sym->data + 4, 4);
+            memcpy(active_sym_buf + 4, sym->data,     4);
+            memcpy(active_sym_buf + 8, sym->data + 8, 42);
+            lv_img_dsc_t inv = *sym;
+            inv.data = active_sym_buf;
+            lv_canvas_draw_img(canvas, mod_cx[0] + 5, mod_cy[0] + 4, &inv, &img_dsc);
+        } else {
+            lv_canvas_draw_img(canvas, mod_cx[0] + 5, mod_cy[0] + 4, sym, &img_dsc);
+        }
+    }
+
+    /* Draw Ctrl, Alt, GUI cells (indices 1-3) with standard active/inactive display */
+    for (int i = 1; i < 4; i++)
     {
         bool active = (state->mods >> i) & 1;
         int cx = mod_cx[i];
@@ -123,6 +157,11 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
             inv.data = active_sym_buf;
             lv_canvas_draw_img(canvas, cx + 5, cy + 4, &inv, &img_dsc);
         }
+        else
+        {
+            lv_canvas_draw_img(canvas, cx + 5, cy + 4, mod_syms[i], &img_dsc);
+        }
+    }
         else
         {
             lv_canvas_draw_img(canvas, cx + 5, cy + 4, mod_syms[i], &img_dsc);
@@ -320,6 +359,8 @@ static void set_modifier_status(struct zmk_widget_status *widget,
                                 struct modifier_status_state state)
 {
     widget->state.mods = state.mods;
+    widget->state.caps_word_active = state.caps_word_active;
+    widget->state.caps_lock_active = state.caps_lock_active;
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
 }
@@ -336,11 +377,21 @@ static void modifier_status_update_cb(struct modifier_status_state state)
 static struct modifier_status_state modifier_status_get_state(const zmk_event_t *eh)
 {
     zmk_mod_flags_t m = zmk_hid_get_explicit_mods();
+
+    /* Track caps-lock state by toggling on each CAPS keycode press */
+    static bool caps_lock_active = false;
+    const struct zmk_keycode_state_changed *kc_ev = as_zmk_keycode_state_changed(eh);
+    if (kc_ev != NULL && kc_ev->state && kc_ev->keycode == 0x39 && kc_ev->usage_page == 0x07) {
+        caps_lock_active = !caps_lock_active;
+    }
+
     return (struct modifier_status_state){
         .mods = (!!(m & (BIT(1) | BIT(5)))) << 0 |
                 (!!(m & (BIT(0) | BIT(4)))) << 1 |
                 (!!(m & (BIT(2) | BIT(6)))) << 2 |
                 (!!(m & (BIT(3) | BIT(7)))) << 3,
+        .caps_word_active = zmk_caps_word_is_active(),
+        .caps_lock_active = caps_lock_active,
     };
 }
 
@@ -348,6 +399,7 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_modifier_status, struct modifier_status_state
                             modifier_status_update_cb, modifier_status_get_state)
 
 ZMK_SUBSCRIPTION(widget_modifier_status, zmk_keycode_state_changed);
+ZMK_SUBSCRIPTION(widget_modifier_status, zmk_caps_word_state_changed);
 
 int top_pos = 92;
 int middle_pos = 24;
