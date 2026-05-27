@@ -24,7 +24,6 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/endpoints.h>
 #include <zmk/keymap.h>
 #include <zmk/hid.h>
-#include <zmk/modifiers.h>
 #include <zmk/events/keycode_state_changed.h>
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
@@ -338,10 +337,10 @@ static struct modifier_status_state modifier_status_get_state(const zmk_event_t 
 {
     zmk_mod_flags_t m = zmk_hid_get_explicit_mods();
     return (struct modifier_status_state){
-        .mods = (!!(m & (MOD_LSFT | MOD_RSFT))) << 0 |
-                (!!(m & (MOD_LCTL | MOD_RCTL))) << 1 |
-                (!!(m & (MOD_LALT | MOD_RALT))) << 2 |
-                (!!(m & (MOD_LGUI | MOD_RGUI))) << 3,
+        .mods = (!!(m & (BIT(1) | BIT(5)))) << 0 |
+                (!!(m & (BIT(0) | BIT(4)))) << 1 |
+                (!!(m & (BIT(2) | BIT(6)))) << 2 |
+                (!!(m & (BIT(3) | BIT(7)))) << 3,
     };
 }
 
