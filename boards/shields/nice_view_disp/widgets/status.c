@@ -25,8 +25,6 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/keymap.h>
 #include <zmk/hid.h>
 #include <zmk/events/keycode_state_changed.h>
-#include <zmk/caps_word.h>
-#include <zmk/events/caps_word_state_changed.h>
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -57,6 +55,49 @@ struct modifier_status_state
     bool caps_word_active;
     bool caps_lock_active;
 };
+
+static bool is_keyboard_alpha(uint32_t keycode)
+{
+    return (keycode >= 0x04 && keycode <= 0x1D);
+}
+
+static bool is_keyboard_numeric(uint32_t keycode)
+{
+    return (keycode >= 0x1E && keycode <= 0x27);
+}
+
+static bool is_keyboard_modifier(uint32_t keycode)
+{
+    return (keycode >= 0xE0 && keycode <= 0xE7);
+}
+
+static bool caps_word_should_continue_compat(const struct zmk_keycode_state_changed *ev)
+{
+    if (ev->usage_page != 0x07)
+    {
+        return false;
+    }
+
+    if (is_keyboard_alpha(ev->keycode) || is_keyboard_numeric(ev->keycode) ||
+        is_keyboard_modifier(ev->keycode))
+    {
+        return true;
+    }
+
+    /* Match the default continue-list entries: UNDERSCORE, BACKSPACE, DELETE. */
+    if (ev->keycode == 0x2A || ev->keycode == 0x4C)
+    {
+        return true;
+    }
+
+    if (ev->keycode == 0x2D)
+    {
+        uint8_t mods = ev->implicit_modifiers | ev->explicit_modifiers;
+        return !!(mods & (BIT(1) | BIT(5)));
+    }
+
+    return false;
+}
 
 static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state)
 {
@@ -107,7 +148,7 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     // Draw modifier keys
     static uint8_t active_sym_buf[50];
     static const lv_img_dsc_t *mod_syms[4] = {&Shift, &Ctrl, &Alt, &Gui};
-    static const int mod_cx[4] = { 0, 34,  0, 34};
+    static const int mod_cx[4] = {0, 34, 0, 34};
     static const int mod_cy[4] = {21, 21, 42, 42};
 
     lv_draw_img_dsc_t img_dsc;
@@ -117,25 +158,33 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     {
         const lv_img_dsc_t *sym;
         bool highlight;
-        if (state->caps_lock_active) {
+        if (state->caps_lock_active)
+        {
             sym = &Cap_lock;
             highlight = true;
-        } else if (state->caps_word_active) {
+        }
+        else if (state->caps_word_active)
+        {
             sym = &Cap_word;
             highlight = true;
-        } else {
+        }
+        else
+        {
             sym = &Shift;
             highlight = (state->mods >> 0) & 1;
         }
-        if (highlight) {
+        if (highlight)
+        {
             lv_canvas_draw_rect(canvas, mod_cx[0], mod_cy[0], 34, 21, &rect_white_dsc);
-            memcpy(active_sym_buf,     sym->data + 4, 4);
-            memcpy(active_sym_buf + 4, sym->data,     4);
+            memcpy(active_sym_buf, sym->data + 4, 4);
+            memcpy(active_sym_buf + 4, sym->data, 4);
             memcpy(active_sym_buf + 8, sym->data + 8, 42);
             lv_img_dsc_t inv = *sym;
             inv.data = active_sym_buf;
             lv_canvas_draw_img(canvas, mod_cx[0] + 5, mod_cy[0] + 4, &inv, &img_dsc);
-        } else {
+        }
+        else
+        {
             lv_canvas_draw_img(canvas, mod_cx[0] + 5, mod_cy[0] + 4, sym, &img_dsc);
         }
     }
@@ -150,8 +199,8 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
         if (active)
         {
             lv_canvas_draw_rect(canvas, cx, cy, 34, 21, &rect_white_dsc);
-            memcpy(active_sym_buf,     mod_syms[i]->data + 4, 4);
-            memcpy(active_sym_buf + 4, mod_syms[i]->data,     4);
+            memcpy(active_sym_buf, mod_syms[i]->data + 4, 4);
+            memcpy(active_sym_buf + 4, mod_syms[i]->data, 4);
             memcpy(active_sym_buf + 8, mod_syms[i]->data + 8, 42);
             lv_img_dsc_t inv = *mod_syms[i];
             inv.data = active_sym_buf;
@@ -162,14 +211,14 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
             lv_canvas_draw_img(canvas, cx + 5, cy + 4, mod_syms[i], &img_dsc);
         }
     }
-        else
-        {
-            lv_canvas_draw_img(canvas, cx + 5, cy + 4, mod_syms[i], &img_dsc);
-        }
+    else
+    {
+        lv_canvas_draw_img(canvas, cx + 5, cy + 4, mod_syms[i], &img_dsc);
     }
+}
 
-    // Rotate canvas
-    rotate_canvas(canvas, cbuf);
+// Rotate canvas
+rotate_canvas(canvas, cbuf);
 }
 
 static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state)
@@ -378,11 +427,37 @@ static struct modifier_status_state modifier_status_get_state(const zmk_event_t 
 {
     zmk_mod_flags_t m = zmk_hid_get_explicit_mods();
 
-    /* Track caps-lock state by toggling on each CAPS keycode press */
+    /* Track caps-lock state by toggling on each CAPS keycode press. */
     static bool caps_lock_active = false;
+    /*
+     * Compatibility fallback for older ZMK branches that do not expose
+     * zmk/caps_word.h state APIs/events. We infer caps-word from keycode events.
+     */
+    static bool caps_word_active = false;
+
     const struct zmk_keycode_state_changed *kc_ev = as_zmk_keycode_state_changed(eh);
-    if (kc_ev != NULL && kc_ev->state && kc_ev->keycode == 0x39 && kc_ev->usage_page == 0x07) {
+
+    if (kc_ev != NULL && kc_ev->state && kc_ev->keycode == 0x39 && kc_ev->usage_page == 0x07)
+    {
         caps_lock_active = !caps_lock_active;
+    }
+
+    if (kc_ev != NULL && kc_ev->state)
+    {
+        bool shifted_alpha_no_explicit_shift =
+            kc_ev->usage_page == 0x07 && is_keyboard_alpha(kc_ev->keycode) &&
+            !!(kc_ev->implicit_modifiers & (BIT(1) | BIT(5))) &&
+            !(kc_ev->explicit_modifiers & (BIT(1) | BIT(5)));
+
+        if (!caps_word_active && shifted_alpha_no_explicit_shift)
+        {
+            caps_word_active = true;
+        }
+
+        if (caps_word_active && !caps_word_should_continue_compat(kc_ev))
+        {
+            caps_word_active = false;
+        }
     }
 
     return (struct modifier_status_state){
@@ -390,7 +465,7 @@ static struct modifier_status_state modifier_status_get_state(const zmk_event_t 
                 (!!(m & (BIT(0) | BIT(4)))) << 1 |
                 (!!(m & (BIT(2) | BIT(6)))) << 2 |
                 (!!(m & (BIT(3) | BIT(7)))) << 3,
-        .caps_word_active = zmk_caps_word_is_active(),
+        .caps_word_active = caps_word_active,
         .caps_lock_active = caps_lock_active,
     };
 }
@@ -399,7 +474,6 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_modifier_status, struct modifier_status_state
                             modifier_status_update_cb, modifier_status_get_state)
 
 ZMK_SUBSCRIPTION(widget_modifier_status, zmk_keycode_state_changed);
-ZMK_SUBSCRIPTION(widget_modifier_status, zmk_caps_word_state_changed);
 
 int top_pos = 92;
 int middle_pos = 24;
