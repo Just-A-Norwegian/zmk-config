@@ -32,7 +32,7 @@ LV_IMG_DECLARE(Shift);
 LV_IMG_DECLARE(Ctrl);
 LV_IMG_DECLARE(Alt);
 LV_IMG_DECLARE(Gui);
-LV_IMG_DECLARE(Cap_word);
+LV_IMG_DECLARE(Caps_word);
 LV_IMG_DECLARE(Cap_lock);
 
 struct output_status_state
@@ -165,7 +165,7 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
         }
         else if (state->caps_word_active)
         {
-            sym = &Cap_word;
+            sym = &Caps_word;
             highlight = true;
         }
         else
