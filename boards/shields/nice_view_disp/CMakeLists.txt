@@ -37,4 +37,3 @@ if(CONFIG_ZMK_DISPLAY AND CONFIG_NICE_VIEW_DISP_WIDGET_STATUS)
     zephyr_library_sources(widgets/peripheral_status.c)
   endif()
 endif()
-e
