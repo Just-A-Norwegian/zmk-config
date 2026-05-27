@@ -211,14 +211,9 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
             lv_canvas_draw_img(canvas, cx + 5, cy + 4, mod_syms[i], &img_dsc);
         }
     }
-    else
-    {
-        lv_canvas_draw_img(canvas, cx + 5, cy + 4, mod_syms[i], &img_dsc);
-    }
-}
 
-// Rotate canvas
-rotate_canvas(canvas, cbuf);
+    // Rotate canvas
+    rotate_canvas(canvas, cbuf);
 }
 
 static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state)
