@@ -52,11 +52,13 @@ LV_IMG_DECLARE(toy);
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
-struct peripheral_status_state {
+struct peripheral_status_state
+{
     bool connected;
 };
 
-static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state) {
+static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state)
+{
     lv_obj_t *canvas = lv_obj_get_child(widget, 0);
 
     lv_draw_label_dsc_t label_dsc;
@@ -78,8 +80,8 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     rotate_canvas(canvas, cbuf);
 }
 
-static void set_battery_status(struct zmk_widget_status *widget,
-                               struct battery_status_state state) {
+static void set_battery_status(struct zmk_widget_status *widget, struct battery_status_state state)
+{
 #if IS_ENABLED(CONFIG_USB_DEVICE_STACK)
     widget->state.charging = state.usb_present;
 #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
@@ -89,12 +91,14 @@ static void set_battery_status(struct zmk_widget_status *widget,
     draw_top(widget->obj, widget->cbuf, &widget->state);
 }
 
-static void battery_status_update_cb(struct battery_status_state state) {
+static void battery_status_update_cb(struct battery_status_state state)
+{
     struct zmk_widget_status *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) { set_battery_status(widget, state); }
 }
 
-static struct battery_status_state battery_status_get_state(const zmk_event_t *eh) {
+static struct battery_status_state battery_status_get_state(const zmk_event_t *eh)
+{
     return (struct battery_status_state){
         .level = zmk_battery_state_of_charge(),
 #if IS_ENABLED(CONFIG_USB_DEVICE_STACK)
@@ -111,18 +115,21 @@ ZMK_SUBSCRIPTION(widget_battery_status, zmk_battery_state_changed);
 ZMK_SUBSCRIPTION(widget_battery_status, zmk_usb_conn_state_changed);
 #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
 
-static struct peripheral_status_state get_state(const zmk_event_t *_eh) {
+static struct peripheral_status_state get_state(const zmk_event_t *_eh)
+{
     return (struct peripheral_status_state){.connected = zmk_split_bt_peripheral_is_connected()};
 }
 
 static void set_connection_status(struct zmk_widget_status *widget,
-                                  struct peripheral_status_state state) {
+                                  struct peripheral_status_state state)
+{
     widget->state.connected = state.connected;
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
 }
 
-static void output_status_update_cb(struct peripheral_status_state state) {
+static void output_status_update_cb(struct peripheral_status_state state)
+{
     struct zmk_widget_status *widget;
     SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) { set_connection_status(widget, state); }
 }
@@ -131,65 +138,81 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_peripheral_status, struct peripheral_status_s
                             output_status_update_cb, get_state)
 ZMK_SUBSCRIPTION(widget_peripheral_status, zmk_split_peripheral_status_changed);
 
-typedef struct {
+typedef struct
+{
     const lv_img_dsc_t **images;
-    uint8_t              count;
+    uint8_t count;
 } art_album_t;
 
-static const lv_img_dsc_t *album_sfw[]  = { &balloon, &mountain };
+static const lv_img_dsc_t *album_sfw[] = {&balloon, &mountain};
 static const lv_img_dsc_t *album_nsfw[] = {
     &abs, &back, &black, &blonde, &boy1, &boy2, &brazil, &bush, &crete, &ginger, &lean, &luigi,
-    &mask, &nurse, &pink, &show, &shower, &skinny, &skirt, &spread, &squirtle, &toy
-};
+    &mask, &nurse, &pink, &show, &shower, &skinny, &skirt, &spread, &squirtle, &toy};
 static const art_album_t albums[] = {
-    { album_sfw,  ARRAY_SIZE(album_sfw)  },
-    { album_nsfw, ARRAY_SIZE(album_nsfw) },
+    {album_sfw, ARRAY_SIZE(album_sfw)},
+    {album_nsfw, ARRAY_SIZE(album_nsfw)},
 };
-#define ALBUM_COUNT  ARRAY_SIZE(albums)
+#define ALBUM_COUNT ARRAY_SIZE(albums)
 #define ART_CYCLE_MS 30000
 
-static uint8_t     album_idx  = 0;
-static uint8_t     image_idx  = 0;
-static bool        auto_loop  = true;
+static uint8_t album_idx = 0;
+static uint8_t image_idx = 0;
+static bool auto_loop = true;
 static lv_timer_t *loop_timer = NULL;
-static lv_obj_t   *art_obj    = NULL;
+static lv_obj_t *art_obj = NULL;
 
-static void show_current_cb(void *_) {
+static void show_current_cb(void *_)
+{
     lv_img_set_src(art_obj, albums[album_idx].images[image_idx]);
 }
 static void show_current(void) { lv_async_call(show_current_cb, NULL); }
 
-static void art_timer_cb(lv_timer_t *timer) {
+static void art_timer_cb(lv_timer_t *timer)
+{
     image_idx = (image_idx + 1) % albums[album_idx].count;
     lv_img_set_src(art_obj, albums[album_idx].images[image_idx]);
 }
 
-static void art_next_image(void) {
+static void art_next_image(void)
+{
     image_idx = (image_idx + 1) % albums[album_idx].count;
     show_current();
 }
-static void art_next_album(void) {
+static void art_next_album(void)
+{
     album_idx = (album_idx + 1) % ALBUM_COUNT;
     image_idx = 0;
     show_current();
 }
-static void art_toggle_loop(void) {
+static void art_toggle_loop(void)
+{
     auto_loop = !auto_loop;
-    if (auto_loop) lv_timer_resume(loop_timer);
-    else           lv_timer_pause(loop_timer);
+    if (auto_loop)
+        lv_timer_resume(loop_timer);
+    else
+        lv_timer_pause(loop_timer);
 }
 
-#define ART_KEY_NEXT_IMAGE   13
-#define ART_KEY_TOGGLE_LOOP  27
-#define ART_KEY_NEXT_ALBUM   39
+#define ART_KEY_NEXT_IMAGE 13
+#define ART_KEY_TOGGLE_LOOP 27
+#define ART_KEY_NEXT_ALBUM 39
 
-static int art_key_handler(const zmk_event_t *eh) {
+static int art_key_handler(const zmk_event_t *eh)
+{
     const struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
-    if (!ev || !ev->state) return ZMK_EV_EVENT_BUBBLE;
-    switch (ev->position) {
-        case ART_KEY_NEXT_IMAGE:  art_next_image();  break;
-        case ART_KEY_TOGGLE_LOOP: art_toggle_loop(); break;
-        case ART_KEY_NEXT_ALBUM:  art_next_album();  break;
+    if (!ev || !ev->state)
+        return ZMK_EV_EVENT_BUBBLE;
+    switch (ev->position)
+    {
+    case ART_KEY_NEXT_IMAGE:
+        art_next_image();
+        break;
+    case ART_KEY_TOGGLE_LOOP:
+        art_toggle_loop();
+        break;
+    case ART_KEY_NEXT_ALBUM:
+        art_next_album();
+        break;
     }
     return ZMK_EV_EVENT_BUBBLE;
 }
@@ -199,7 +222,8 @@ ZMK_SUBSCRIPTION(art_key_ctrl, zmk_position_state_changed);
 int art_pos = 0;
 int top_pos = 92;
 
-int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
+int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent)
+{
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, 160, 68);
     lv_obj_t *top = lv_canvas_create(widget->obj);
