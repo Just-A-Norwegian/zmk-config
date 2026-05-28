@@ -25,7 +25,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/keymap.h>
 #include <zmk/hid.h>
 #include <zmk/events/keycode_state_changed.h>
-#include <zmk/events/position_state_changed.h>
+#include <zmk/events/magic_mode_changed.h>
+#include <zmk/magic_mode.h>
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -53,41 +54,8 @@ struct layer_status_state
 struct modifier_status_state
 {
     uint8_t mods;
-    bool caps_word_active;
-    bool caps_lock_active;
+    uint8_t magic_mode;
 };
-
-/* Left magic-shift key is at thumb position 40 in corne_choc_pro.keymap. */
-#define MAGIC_SHIFT_POSITION 40
-/* Keep in sync with keymap tap-dance tapping-term-ms. */
-#define MAGIC_TAP_TERM_MS 200
-
-static bool is_keyboard_alpha(uint32_t keycode)
-{
-    return (keycode >= 0x04 && keycode <= 0x1D);
-}
-
-static bool is_keyboard_modifier(uint32_t keycode)
-{
-    return (keycode >= 0xE0 && keycode <= 0xE7);
-}
-
-static bool caps_word_should_continue_compat(const struct zmk_keycode_state_changed *ev)
-{
-    if (ev->usage_page != 0x07)
-    {
-        return false;
-    }
-
-    /* Allow alphas, modifiers, backspace (0x2A), and delete (0x4C) to continue caps-word. */
-    uint32_t code = ev->keycode;
-    if (is_keyboard_alpha(code) || is_keyboard_modifier(code) || code == 0x2A || code == 0x4C)
-    {
-        return true;
-    }
-
-    return false;
-}
 
 static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state)
 {
@@ -144,24 +112,25 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     lv_draw_img_dsc_t img_dsc;
     lv_draw_img_dsc_init(&img_dsc);
 
-    /* Draw Shift cell (index 0) with three states: caps-lock, caps-word, or normal shift */
+    /* Draw Shift cell (index 0) from the shared magic mode. */
     {
         const lv_img_dsc_t *sym;
         bool highlight;
-        if (state->caps_lock_active)
+        switch (state->magic_mode)
         {
+        case ZMK_MAGIC_MODE_CAPS:
             sym = &Cap_lock;
             highlight = true;
-        }
-        else if (state->caps_word_active)
-        {
+            break;
+        case ZMK_MAGIC_MODE_SHIFT_WORD:
             sym = &Caps_word;
             highlight = true;
-        }
-        else
-        {
+            break;
+        case ZMK_MAGIC_MODE_NORMAL:
+        default:
             sym = &Shift;
             highlight = (state->mods >> 0) & 1;
+            break;
         }
         if (highlight)
         {
@@ -393,8 +362,7 @@ static void set_modifier_status(struct zmk_widget_status *widget,
                                 struct modifier_status_state state)
 {
     widget->state.mods = state.mods;
-    widget->state.caps_word_active = state.caps_word_active;
-    widget->state.caps_lock_active = state.caps_lock_active;
+    widget->state.magic_mode = state.magic_mode;
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
 }
@@ -411,106 +379,15 @@ static void modifier_status_update_cb(struct modifier_status_state state)
 static struct modifier_status_state modifier_status_get_state(const zmk_event_t *eh)
 {
     zmk_mod_flags_t m = zmk_hid_get_explicit_mods();
-
-    static bool caps_word_active = false;
-    static bool caps_lock_active = false;
-    static int64_t last_magic_shift_press_time = 0;
-    static bool magic_double_tap_pending = false;
-
-    const struct zmk_keycode_state_changed *kc_ev = as_zmk_keycode_state_changed(eh);
-    const struct zmk_position_state_changed *pos_ev = as_zmk_position_state_changed(eh);
-    int64_t event_ts = 0;
-
-    if (kc_ev != NULL)
-    {
-        event_ts = kc_ev->timestamp;
-    }
-    else if (pos_ev != NULL)
-    {
-        event_ts = pos_ev->timestamp;
-    }
-
-    /* Time out pending double-tap if no CAPS keycode arrived in time. */
-    if (magic_double_tap_pending && (event_ts - last_magic_shift_press_time > MAGIC_TAP_TERM_MS))
-    {
-        magic_double_tap_pending = false;
-        if (!caps_lock_active)
-        {
-            caps_word_active = true;
-        }
-    }
-
-    /* Position presses only control caps-word preview and double-tap arming. */
-    if (pos_ev != NULL && pos_ev->position == MAGIC_SHIFT_POSITION && pos_ev->state)
-    {
-        bool within_tap_window =
-            (pos_ev->timestamp - last_magic_shift_press_time) <= MAGIC_TAP_TERM_MS;
-
-        if (within_tap_window)
-        {
-            /* Second tap candidate: wait for CAPS keycode confirmation. */
-            magic_double_tap_pending = true;
-            caps_word_active = false;
-        }
-        else
-        {
-            /* First tap: show caps-word immediately, except while caps-lock is active. */
-            magic_double_tap_pending = false;
-            if (!caps_lock_active)
-            {
-                caps_word_active = true;
-            }
-        }
-
-        last_magic_shift_press_time = pos_ev->timestamp;
-    }
-
-    if (kc_ev != NULL && kc_ev->state && kc_ev->usage_page == 0x07)
-    {
-        if (kc_ev->keycode == 0x39)
-        {
-            /* CAPS keycode is the source of truth for caps-lock toggles. */
-            caps_lock_active = !caps_lock_active;
-            caps_word_active = false;
-            magic_double_tap_pending = false;
-        }
-        else
-        {
-            bool shifted_alpha_from_behavior =
-                is_keyboard_alpha(kc_ev->keycode) &&
-                !!(kc_ev->implicit_modifiers & (BIT(1) | BIT(5))) &&
-                !(kc_ev->explicit_modifiers & (BIT(1) | BIT(5)));
-
-            if (shifted_alpha_from_behavior)
-            {
-                caps_word_active = true;
-                caps_lock_active = false;
-                magic_double_tap_pending = false;
-            }
-
-            /* Explicit shift key presses indicate hold-shift behavior, not caps-word. */
-            if (kc_ev->keycode == 0xE1 || kc_ev->keycode == 0xE5)
-            {
-                caps_word_active = false;
-            }
-
-            /* Any non-CAPS key resolves pending double-tap detection. */
-            magic_double_tap_pending = false;
-
-            if (caps_word_active && !caps_word_should_continue_compat(kc_ev))
-            {
-                caps_word_active = false;
-            }
-        }
-    }
+    const struct zmk_magic_mode_changed *magic_mode_ev = as_zmk_magic_mode_changed(eh);
+    uint8_t magic_mode = magic_mode_ev != NULL ? magic_mode_ev->mode : (uint8_t)zmk_magic_mode_get();
 
     return (struct modifier_status_state){
         .mods = (!!(m & (BIT(1) | BIT(5)))) << 0 |
                 (!!(m & (BIT(0) | BIT(4)))) << 1 |
                 (!!(m & (BIT(2) | BIT(6)))) << 2 |
                 (!!(m & (BIT(3) | BIT(7)))) << 3,
-        .caps_word_active = caps_word_active,
-        .caps_lock_active = caps_lock_active,
+        .magic_mode = magic_mode,
     };
 }
 
@@ -518,7 +395,7 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_modifier_status, struct modifier_status_state
                             modifier_status_update_cb, modifier_status_get_state)
 
 ZMK_SUBSCRIPTION(widget_modifier_status, zmk_keycode_state_changed);
-ZMK_SUBSCRIPTION(widget_modifier_status, zmk_position_state_changed);
+ZMK_SUBSCRIPTION(widget_modifier_status, zmk_magic_mode_changed);
 
 int top_pos = 92;
 int middle_pos = 24;

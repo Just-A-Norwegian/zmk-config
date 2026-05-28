@@ -1,0 +1,5 @@
+description: Magic terminator behavior
+
+compatible: "zmk,behavior-magic-term"
+
+include: one_param.yaml

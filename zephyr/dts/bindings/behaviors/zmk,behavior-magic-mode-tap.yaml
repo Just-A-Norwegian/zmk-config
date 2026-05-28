@@ -1,0 +1,5 @@
+description: Magic mode tap behavior
+
+compatible: "zmk,behavior-magic-mode-tap"
+
+include: one_param.yaml
