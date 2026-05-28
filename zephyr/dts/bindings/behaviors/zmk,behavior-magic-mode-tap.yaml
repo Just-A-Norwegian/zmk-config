@@ -2,4 +2,17 @@ description: Magic mode tap behavior
 
 compatible: "zmk,behavior-magic-mode-tap"
 
-include: one_param.yaml
+include: behavior-metadata.yaml
+
+properties:
+	label:
+		type: string
+		required: false
+		deprecated: true
+	"#binding-cells":
+		type: int
+		required: true
+		const: 1
+
+binding-cells:
+	- param1
