@@ -5,14 +5,14 @@ compatible: "zmk,behavior-magic-term"
 include: behavior-metadata.yaml
 
 properties:
-	label:
-		type: string
-		required: false
-		deprecated: true
-	"#binding-cells":
-		type: int
-		required: true
-		const: 1
+  label:
+    type: string
+    required: false
+    deprecated: true
+  "#binding-cells":
+    type: int
+    required: true
+    const: 1
 
 binding-cells:
-	- param1
+  - param1
