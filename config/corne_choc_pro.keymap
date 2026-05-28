@@ -33,7 +33,7 @@ ZMK_HOLD_TAP(hml,
     tapping-term-ms = <280>;
     quick-tap-ms = <175>;
     require-prior-idle-ms = <150>;
-    bindings = <&kp>, <&magic_alpha>;
+    bindings = <&kp>, <&kp>;
     hold-trigger-key-positions = <KEYS_R THUMBS>;
     hold-trigger-on-release;
 )
@@ -44,7 +44,7 @@ ZMK_HOLD_TAP(hmr,
     tapping-term-ms = <280>;
     quick-tap-ms = <175>;
     require-prior-idle-ms = <150>;
-    bindings = <&kp>, <&magic_alpha>;
+    bindings = <&kp>, <&kp>;
     hold-trigger-key-positions = <KEYS_L THUMBS>;
     hold-trigger-on-release;
 )
@@ -54,7 +54,7 @@ ZMK_HOLD_TAP(tlt,
     flavor = "balanced";
     tapping-term-ms = <200>;
     quick-tap-ms = <175>;
-    bindings = <&mo>, <&magic_term>;
+    bindings = <&mo>, <&kp>;
 )
 
 /* Thumb layer-tap for backspace: hold = momentary layer, tap = bspc/del mod-morph */
@@ -156,30 +156,11 @@ ZMK_MOD_MORPH(dllr_mr,
  * - Tap   : shift-word
  * - Tap x2: caps mode
  * - Hold  : regular shift */
-/ {
-    behaviors {
-        magic_mode_tap: magic_mode_tap {
-            compatible = "zmk,behavior-magic-mode-tap";
-            #binding-cells = <1>;
-            display-name = "Magic Mode Tap";
-        };
-        magic_alpha: magic_alpha {
-            compatible = "zmk,behavior-magic-alpha";
-            #binding-cells = <1>;
-            display-name = "Magic Alpha";
-        };
-        magic_term: magic_term {
-            compatible = "zmk,behavior-magic-term";
-            #binding-cells = <1>;
-            display-name = "Magic Terminator";
-        };
-    };
-};
 ZMK_HOLD_TAP(magic_shift,
     flavor = "tap-preferred";
     tapping-term-ms = <200>;
     quick-tap-ms = <175>;
-    bindings = <&kp>, <&magic_mode_tap>;
+    bindings = <&kp>, <&none>;
 )
 
 
@@ -253,11 +234,11 @@ ZMK_HOLD_TAP(magic_shift,
             display-name = "ENG-US";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                XXX           &magic_alpha Q &magic_alpha W &magic_alpha F &magic_alpha P &magic_alpha G XXX XXX   &magic_alpha J &magic_alpha L &magic_alpha U &magic_alpha Y &kp SQT       XXX  
+                XXX           &kp Q         &kp W         &kp F         &kp P         &kp G         XXX XXX   &kp J         &kp L         &kp U         &kp Y         &kp SQT       XXX  
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &hml LGUI A   &hml LALT R   &hml LCTRL S  &hml LSHFT T  &magic_alpha D XXX XXX   &magic_alpha H &hmr LSHFT N  &hmr LCTRL E  &hmr LALT I   &hmr LGUI O   XXX
+                XXX           &hml LGUI A   &hml LALT R   &hml LCTRL S  &hml LSHFT T  &kp D         XXX XXX   &kp H         &hmr LSHFT N  &hmr LCTRL E  &hmr LALT I   &hmr LGUI O   XXX
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &magic_alpha Z &magic_alpha X &magic_alpha C &magic_alpha V &magic_alpha B         &magic_alpha K &magic_alpha M &comma_mr     &dot_mr       &qmark_mr     XXX  
+                XXX           &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &comma_mr     &dot_mr       &qmark_mr     XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            MAGIC SHIFT   NAVIGATION    FUNCTION                SYMBOL        NUMBERS       MAGIC SHIFT
                                                    &magic_shift LSHFT 0 &tlt 3 SPACE  &tlt 4 TAB              &tlt 5 RET    &tlt_bspc 7 0 &kp DEL
@@ -271,11 +252,11 @@ ZMK_HOLD_TAP(magic_shift,
             display-name = "NOR-NB";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                &magic_alpha NB_O_SLASH ___          ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           &nb_sqt_mr    ___
+                &kp NB_O_SLASH ___          ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           &nb_sqt_mr    ___
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                &magic_alpha NB_A_RING ___           ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           ___           ___
+                &kp NB_A_RING ___           ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           ___           ___
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                &magic_alpha NB_AE ___           ___           ___           ___           ___                     ___           ___           &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  ___
+                &kp NB_AE     ___           ___           ___           ___           ___                     ___           ___           &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  ___
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
                                                           ___           ___           ___                     &tlt 6 RET    ___           ___
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
@@ -289,13 +270,13 @@ ZMK_HOLD_TAP(magic_shift,
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
             //  ø(RA+P)       Q             W             E             R             T                       Y             U             I             O             P             (enc)
-                &magic_alpha RA(P) &magic_alpha Q &magic_alpha W &magic_alpha E &magic_alpha R &magic_alpha T XXX XXX   &magic_alpha Y &magic_alpha U &magic_alpha I &magic_alpha O &magic_alpha P ___
+                &kp RA(P)     &kp Q         &kp W         &kp E         &kp R         &kp T         XXX XXX   &kp Y         &kp U         &kp I         &kp O         &kp P         ___
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
             //  å(RA+W)       A/GUI         S/ALT         D/CTL         F/SFT         G                       H             J/SFT         K/CTL         L/ALT         ;/GUI         (enc)
-                &magic_alpha RA(W) &hml LGUI A   &hml LALT S   &hml LCTRL D  &hml LSHFT F  &magic_alpha G XXX XXX   &magic_alpha H &hmr LSHFT J  &hmr LCTRL K  &hmr LALT L   &hmr LGUI SEMI ___
+                &kp RA(W)     &hml LGUI A   &hml LALT S   &hml LCTRL D  &hml LSHFT F  &kp G         XXX XXX   &kp H         &hmr LSHFT J  &hmr LCTRL K  &hmr LALT L   &hmr LGUI SEMI ___
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
             //  æ(RA+Z)       Z             X             C             V             B                       N             M             ,/;           ./:           ?/!
-                &magic_alpha RA(Z) &magic_alpha Z &magic_alpha X &magic_alpha C &magic_alpha V &magic_alpha B       &magic_alpha N &magic_alpha M &comma_mr     &dot_mr       &qmark_mr     ___
+                &kp RA(Z)     &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp N         &kp M         &comma_mr     &dot_mr       &qmark_mr     ___
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            (transparent — fall through to ENG-US layer)
                                                           ___           ___           ___                     ___           ___           ___
@@ -311,7 +292,7 @@ ZMK_HOLD_TAP(magic_shift,
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
                 XXX           XXX           XXX           XXX           XXX           XXX           XXX XXX   &kp PG_UP     NAV_BSPC      NAV_UP        NAV_DEL       XXX           XXX   
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     XXX           XXX XXX   &kp PG_DN     NAV_LEFT      NAV_DOWN      NAV_RIGHT     &magic_term RET XXX   
+                XXX           &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     XXX           XXX XXX   &kp PG_DN     NAV_LEFT      NAV_DOWN      NAV_RIGHT     &kp RET       XXX   
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
                 XXX           XXX           XXX           XXX           XXX           XXX                     &kp INS       XXX           XXX           XXX           XXX           XXX   
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
@@ -388,14 +369,14 @@ ZMK_HOLD_TAP(magic_shift,
             display-name = "GAMING";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                &kp ESC       &magic_term TAB &magic_alpha Q &magic_alpha W &magic_alpha E &magic_alpha R XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
+                &kp ESC       &kp TAB       &kp Q         &kp W         &kp E         &kp R         XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp LSHFT     &magic_alpha A &magic_alpha S &magic_alpha D &magic_alpha F XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
+                XXX           &kp LSHFT     &kp A         &kp S         &kp D         &kp F         XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp LCTRL     &magic_alpha Z &magic_alpha X &magic_alpha C &magic_alpha V         XXX           XXX           XXX           XXX           XXX           XXX  
+                XXX           &kp LCTRL     &kp Z         &kp X         &kp C         &kp V                   XXX           XXX           XXX           XXX           XXX           XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            MAGIC SHIFT   NAVIGATION    SYMBOL                  MEDIA        
-                                                          &magic_term TAB &magic_term SPACE &magic_term TAB     &tlt 5 RET    XXX           XXX
+                                                          &kp TAB       &kp SPACE     &kp TAB                 &tlt 5 RET    XXX           XXX
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
