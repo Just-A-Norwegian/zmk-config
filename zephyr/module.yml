@@ -1,3 +1,5 @@
+name: zmk-config
+
 build:
   cmake: src
   settings:
