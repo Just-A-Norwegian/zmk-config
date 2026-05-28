@@ -77,8 +77,9 @@ static bool caps_word_should_continue_compat(const struct zmk_keycode_state_chan
         return false;
     }
 
-    /* Keep active only across alpha keys (plus held modifiers). */
-    if (is_keyboard_alpha(ev->keycode) || is_keyboard_modifier(ev->keycode))
+    /* Allow alphas, modifiers, backspace (0x2A), and delete (0x4C) to continue caps-word. */
+    uint32_t code = ev->keycode;
+    if (is_keyboard_alpha(code) || is_keyboard_modifier(code) || code == 0x2A || code == 0x4C)
     {
         return true;
     }
@@ -412,38 +413,47 @@ static struct modifier_status_state modifier_status_get_state(const zmk_event_t 
     static bool caps_word_active = false;
     static bool caps_lock_active = false;
     static int64_t last_magic_shift_press_time = 0;
+    static int64_t last_magic_shift_release_time = 0;
     static int magic_shift_press_count = 0;
 
     const struct zmk_keycode_state_changed *kc_ev = as_zmk_keycode_state_changed(eh);
     const struct zmk_position_state_changed *pos_ev = as_zmk_position_state_changed(eh);
 
-    /* Track magic shift position presses to detect single vs double tap. */
-    if (pos_ev != NULL && pos_ev->position == MAGIC_SHIFT_POSITION && pos_ev->state)
+    /* Track magic shift position presses and releases to detect single vs double tap. */
+    if (pos_ev != NULL && pos_ev->position == MAGIC_SHIFT_POSITION)
     {
-        /* Reset press counter if more than 250ms since last press (outside tap-dance window). */
-        if (pos_ev->timestamp - last_magic_shift_press_time > 250)
+        if (pos_ev->state) /* Press event */
         {
-            magic_shift_press_count = 0;
-        }
+            /* Reset press counter if more than 250ms since last release (outside tap-dance window). */
+            if (pos_ev->timestamp - last_magic_shift_release_time > 250)
+            {
+                magic_shift_press_count = 0;
+            }
 
-        last_magic_shift_press_time = pos_ev->timestamp;
-        magic_shift_press_count++;
+            last_magic_shift_press_time = pos_ev->timestamp;
+            magic_shift_press_count++;
 
-        /* First press = single tap = activate caps-word immediately. */
-        if (magic_shift_press_count == 1)
-        {
-            caps_word_active = true;
-            caps_lock_active = false;
+            /* First press = single tap = activate caps-word immediately. */
+            if (magic_shift_press_count == 1)
+            {
+                caps_word_active = true;
+                caps_lock_active = false;
+            }
+            /* Second press = double tap = toggle caps-lock. */
+            else if (magic_shift_press_count == 2)
+            {
+                caps_lock_active = !caps_lock_active;
+                caps_word_active = false;
+            }
         }
-        /* Second press = double tap = toggle caps-lock. */
-        else if (magic_shift_press_count == 2)
+        else /* Release event */
         {
-            caps_lock_active = !caps_lock_active;
-            caps_word_active = false;
+            /* Record release time so we know when tap-dance sequence is complete. */
+            last_magic_shift_release_time = pos_ev->timestamp;
         }
     }
 
-    /* Deactivate caps-word when a non-alpha key is pressed. */
+    /* Deactivate caps-word when a non-continuing key is pressed. */
     if (kc_ev != NULL && kc_ev->state && caps_word_active && !caps_word_should_continue_compat(kc_ev))
     {
         caps_word_active = false;
