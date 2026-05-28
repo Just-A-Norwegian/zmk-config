@@ -25,6 +25,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/keymap.h>
 #include <zmk/hid.h>
 #include <zmk/events/keycode_state_changed.h>
+#include <zmk/events/position_state_changed.h>
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -56,8 +57,8 @@ struct modifier_status_state
     bool caps_lock_active;
 };
 
-/* Show caps-lock symbol for this duration (ms) after a CAPS keycode press. */
-#define CAPS_LOCK_DISPLAY_MS 2000
+/* Left magic-shift key is at thumb position 40 in corne_choc_pro.keymap. */
+#define MAGIC_SHIFT_POSITION 40
 
 static bool is_keyboard_alpha(uint32_t keycode)
 {
@@ -408,46 +409,45 @@ static struct modifier_status_state modifier_status_get_state(const zmk_event_t 
 {
     zmk_mod_flags_t m = zmk_hid_get_explicit_mods();
 
-    /*
-     * Compatibility fallback for older ZMK branches that do not expose
-     * zmk/caps_word.h state APIs/events. We infer caps-word from keycode events.
-     */
     static bool caps_word_active = false;
-    /* Track timestamp of last CAPS keycode to display caps-lock state temporarily. */
-    static int64_t last_caps_keycode_press_time = 0;
+    static bool caps_lock_active = false;
+    static int64_t last_magic_shift_press_time = 0;
+    static int magic_shift_press_count = 0;
 
     const struct zmk_keycode_state_changed *kc_ev = as_zmk_keycode_state_changed(eh);
+    const struct zmk_position_state_changed *pos_ev = as_zmk_position_state_changed(eh);
 
-    /* Detect CAPS keycode press: double-tap magic shift sends this. */
-    if (kc_ev != NULL && kc_ev->state && kc_ev->keycode == 0x39 && kc_ev->usage_page == 0x07)
+    /* Track magic shift position presses to detect single vs double tap. */
+    if (pos_ev != NULL && pos_ev->position == MAGIC_SHIFT_POSITION && pos_ev->state)
     {
-        /* Record timestamp so we show the caps-lock icon temporarily. */
-        last_caps_keycode_press_time = kc_ev->timestamp;
-        /* Clear caps-word when CAPS is pressed. */
-        caps_word_active = false;
-    }
-
-    if (kc_ev != NULL && kc_ev->state)
-    {
-        /* Detect caps-word mode: shifted alphas from behavior (not explicit user shift). */
-        bool shifted_alpha_from_behavior =
-            kc_ev->usage_page == 0x07 && is_keyboard_alpha(kc_ev->keycode) &&
-            !!(kc_ev->implicit_modifiers & (BIT(1) | BIT(5))) &&
-            !(kc_ev->explicit_modifiers & (BIT(1) | BIT(5)));
-
-        if (shifted_alpha_from_behavior)
+        /* Reset press counter if more than 250ms since last press (outside tap-dance window). */
+        if (pos_ev->timestamp - last_magic_shift_press_time > 250)
         {
-            caps_word_active = true;
+            magic_shift_press_count = 0;
         }
 
-        if (caps_word_active && !caps_word_should_continue_compat(kc_ev))
+        last_magic_shift_press_time = pos_ev->timestamp;
+        magic_shift_press_count++;
+
+        /* First press = single tap = activate caps-word immediately. */
+        if (magic_shift_press_count == 1)
         {
+            caps_word_active = true;
+            caps_lock_active = false;
+        }
+        /* Second press = double tap = toggle caps-lock. */
+        else if (magic_shift_press_count == 2)
+        {
+            caps_lock_active = !caps_lock_active;
             caps_word_active = false;
         }
     }
 
-    /* Show caps-lock if CAPS was pressed recently. */
-    bool caps_lock_active = (kc_ev != NULL && kc_ev->timestamp - last_caps_keycode_press_time < CAPS_LOCK_DISPLAY_MS);
+    /* Deactivate caps-word when a non-alpha key is pressed. */
+    if (kc_ev != NULL && kc_ev->state && caps_word_active && !caps_word_should_continue_compat(kc_ev))
+    {
+        caps_word_active = false;
+    }
 
     return (struct modifier_status_state){
         .mods = (!!(m & (BIT(1) | BIT(5)))) << 0 |
@@ -463,6 +463,7 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_modifier_status, struct modifier_status_state
                             modifier_status_update_cb, modifier_status_get_state)
 
 ZMK_SUBSCRIPTION(widget_modifier_status, zmk_keycode_state_changed);
+ZMK_SUBSCRIPTION(widget_modifier_status, zmk_position_state_changed);
 
 int top_pos = 92;
 int middle_pos = 24;
