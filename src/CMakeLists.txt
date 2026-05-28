@@ -1,5 +1,5 @@
 if(NOT CONFIG_ZMK_SPLIT OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
-  zephyr_library_include_directories(${CMAKE_SOURCE_DIR}/include)
+  zephyr_include_directories(${CMAKE_CURRENT_LIST_DIR}/../include)
   zephyr_library_sources(nb_layer_persist.c)
   zephyr_library_sources(magic_mode.c)
   zephyr_library_sources(behavior_magic_mode_tap.c)
