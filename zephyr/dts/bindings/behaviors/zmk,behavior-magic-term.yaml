@@ -2,9 +2,9 @@ description: Magic terminator behavior
 
 compatible: "zmk,behavior-magic-term"
 
-include: behavior-metadata.yaml
-
 properties:
+  display-name:
+    type: string
   label:
     type: string
     required: false
