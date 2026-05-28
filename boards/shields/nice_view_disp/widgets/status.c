@@ -25,6 +25,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/keymap.h>
 #include <zmk/hid.h>
 #include <zmk/events/keycode_state_changed.h>
+#include <zmk/events/position_state_changed.h>
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -56,14 +57,12 @@ struct modifier_status_state
     bool caps_lock_active;
 };
 
+/* Left magic-shift key is at thumb position 40 in corne_choc_pro.keymap. */
+#define MAGIC_SHIFT_POSITION 40
+
 static bool is_keyboard_alpha(uint32_t keycode)
 {
     return (keycode >= 0x04 && keycode <= 0x1D);
-}
-
-static bool is_keyboard_numeric(uint32_t keycode)
-{
-    return (keycode >= 0x1E && keycode <= 0x27);
 }
 
 static bool is_keyboard_modifier(uint32_t keycode)
@@ -78,22 +77,10 @@ static bool caps_word_should_continue_compat(const struct zmk_keycode_state_chan
         return false;
     }
 
-    if (is_keyboard_alpha(ev->keycode) || is_keyboard_numeric(ev->keycode) ||
-        is_keyboard_modifier(ev->keycode))
+    /* Keep active only across alpha keys (plus held modifiers). */
+    if (is_keyboard_alpha(ev->keycode) || is_keyboard_modifier(ev->keycode))
     {
         return true;
-    }
-
-    /* Match the default continue-list entries: UNDERSCORE, BACKSPACE, DELETE. */
-    if (ev->keycode == 0x2A || ev->keycode == 0x4C)
-    {
-        return true;
-    }
-
-    if (ev->keycode == 0x2D)
-    {
-        uint8_t mods = ev->implicit_modifiers | ev->explicit_modifiers;
-        return !!(mods & (BIT(1) | BIT(5)));
     }
 
     return false;
@@ -431,6 +418,13 @@ static struct modifier_status_state modifier_status_get_state(const zmk_event_t 
     static bool caps_word_active = false;
 
     const struct zmk_keycode_state_changed *kc_ev = as_zmk_keycode_state_changed(eh);
+    const struct zmk_position_state_changed *pos_ev = as_zmk_position_state_changed(eh);
+
+    /* Reflect tap-dance press immediately so the widget updates without waiting for a typed key. */
+    if (pos_ev != NULL && pos_ev->state && pos_ev->position == MAGIC_SHIFT_POSITION)
+    {
+        caps_word_active = !caps_word_active;
+    }
 
     if (kc_ev != NULL && kc_ev->state && kc_ev->keycode == 0x39 && kc_ev->usage_page == 0x07)
     {
@@ -439,14 +433,14 @@ static struct modifier_status_state modifier_status_get_state(const zmk_event_t 
 
     if (kc_ev != NULL && kc_ev->state)
     {
-        bool shifted_alpha_no_explicit_shift =
-            kc_ev->usage_page == 0x07 && is_keyboard_alpha(kc_ev->keycode) &&
-            !!(kc_ev->implicit_modifiers & (BIT(1) | BIT(5))) &&
-            !(kc_ev->explicit_modifiers & (BIT(1) | BIT(5)));
+        /* If magic shift was held as real Shift, do not treat it as caps-word. */
+        bool is_explicit_shift_press =
+            kc_ev->usage_page == 0x07 && is_keyboard_modifier(kc_ev->keycode) &&
+            !!(kc_ev->explicit_modifiers & (BIT(1) | BIT(5)));
 
-        if (!caps_word_active && shifted_alpha_no_explicit_shift)
+        if (is_explicit_shift_press)
         {
-            caps_word_active = true;
+            caps_word_active = false;
         }
 
         if (caps_word_active && !caps_word_should_continue_compat(kc_ev))
@@ -469,6 +463,7 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_modifier_status, struct modifier_status_state
                             modifier_status_update_cb, modifier_status_get_state)
 
 ZMK_SUBSCRIPTION(widget_modifier_status, zmk_keycode_state_changed);
+ZMK_SUBSCRIPTION(widget_modifier_status, zmk_position_state_changed);
 
 int top_pos = 92;
 int middle_pos = 24;
