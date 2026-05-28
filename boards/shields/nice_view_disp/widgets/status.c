@@ -429,6 +429,8 @@ static struct modifier_status_state modifier_status_get_state(const zmk_event_t 
     if (kc_ev != NULL && kc_ev->state && kc_ev->keycode == 0x39 && kc_ev->usage_page == 0x07)
     {
         caps_lock_active = !caps_lock_active;
+        /* When tap-dance resolves to CAPS, this is not caps-word mode. */
+        caps_word_active = false;
     }
 
     if (kc_ev != NULL && kc_ev->state)
