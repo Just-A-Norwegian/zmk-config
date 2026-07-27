@@ -364,7 +364,7 @@ ZMK_MOD_MORPH(dllr_mr,
                 XXX           &kp LCTRL     &kp Z         &kp X         &kp C         &kp V                   XXX           XXX           XXX           XXX           XXX           XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            ALT           NAVIGATION    SYMBOL                  MEDIA
-                                                          &kp ALT       &kp SPACE     &kp TAB                 &tlt 5 RET    XXX           XXX
+                                                          &kp LALT       &kp SPACE     &tlt 4 TAB              &tlt 5 RET    XXX           XXX
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
