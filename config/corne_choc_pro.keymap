@@ -32,7 +32,6 @@ ZMK_HOLD_TAP(hml,
     flavor = "balanced";
     tapping-term-ms = <280>;
     quick-tap-ms = <175>;
-    require-prior-idle-ms = <150>;
     bindings = <&kp>, <&kp>;
     hold-trigger-key-positions = <KEYS_R THUMBS>;
     hold-trigger-on-release;
@@ -43,7 +42,6 @@ ZMK_HOLD_TAP(hmr,
     flavor = "balanced";
     tapping-term-ms = <280>;
     quick-tap-ms = <175>;
-    require-prior-idle-ms = <150>;
     bindings = <&kp>, <&kp>;
     hold-trigger-key-positions = <KEYS_L THUMBS>;
     hold-trigger-on-release;
@@ -357,11 +355,11 @@ ZMK_MOD_MORPH(dllr_mr,
             display-name = "GAMING";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                &kp ESC       &kp TAB       &kp Q         &kp W         &kp E         &kp R         XXX XXX   XXX           &kp F7        &kp F8        &kp F9        XXX           XXX  
+                &kp ESC       &kp TAB       &kp Q         &kp W         &kp E         &kp R         XXX XXX   XXX           &kp N7        &kp N8        &kp N9        XXX           XXX  
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp LSHFT     &kp A         &kp S         &kp D         &kp F         XXX XXX   XXX           &kp F4        &kp F5        &kp F6        &kp F0        XXX
+                XXX           &kp LSHFT     &kp A         &kp S         &kp D         &kp F         XXX XXX   XXX           &kp N4        &kp N5        &kp N6        &kp F0        XXX
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp LCTRL     &kp Z         &kp X         &kp C         &kp V                   XXX           &kp F1        &kp F2        &kp F3        XXX           XXX  
+                XXX           &kp LCTRL     &kp Z         &kp X         &kp C         &kp V                   XXX           &kp N1        &kp N2        &kp N3        XXX           XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            ALT           NAVIGATION    SYMBOL                  MEDIA
                                                           &kp LALT       &kp SPACE     &tlt 4 TAB              &tlt 5 RET    XXX           XXX
