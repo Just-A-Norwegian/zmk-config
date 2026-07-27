@@ -357,11 +357,11 @@ ZMK_MOD_MORPH(dllr_mr,
             display-name = "GAMING";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                &kp ESC       &kp TAB       &kp Q         &kp W         &kp E         &kp R         XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
+                &kp ESC       &kp TAB       &kp Q         &kp W         &kp E         &kp R         XXX XXX   XXX           &kp F7        &kp F8        &kp F9        XXX           XXX  
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp LSHFT     &kp A         &kp S         &kp D         &kp F         XXX XXX   XXX           XXX           XXX           XXX           XXX           XXX  
+                XXX           &kp LSHFT     &kp A         &kp S         &kp D         &kp F         XXX XXX   XXX           &kp F4        &kp F5        &kp F6        &kp F0        XXX
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp LCTRL     &kp Z         &kp X         &kp C         &kp V                   XXX           XXX           XXX           XXX           XXX           XXX  
+                XXX           &kp LCTRL     &kp Z         &kp X         &kp C         &kp V                   XXX           &kp F1        &kp F2        &kp F3        XXX           XXX  
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            ALT           NAVIGATION    SYMBOL                  MEDIA
                                                           &kp LALT       &kp SPACE     &tlt 4 TAB              &tlt 5 RET    XXX           XXX
