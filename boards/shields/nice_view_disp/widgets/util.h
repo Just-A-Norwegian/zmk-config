@@ -27,7 +27,8 @@ struct status_state
     uint8_t layer_index;
     const char *layer_label;
     uint8_t mods;
-    uint8_t magic_mode;
+    bool caps_word_active;
+    bool caps_lock_active;
 #else
     bool connected;
 #endif

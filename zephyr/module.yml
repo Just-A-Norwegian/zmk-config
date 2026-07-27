@@ -1,7 +1,4 @@
-name: zmk-config
-
 build:
   cmake: src
   settings:
     board_root: .
-    dts_root: .
