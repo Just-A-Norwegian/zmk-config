@@ -375,7 +375,7 @@ ZMK_MOD_MORPH(dllr_mr,
                 XXX           &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4  XXX XXX   &rgb_ug RGB_TOG  &rgb_ug RGB_HUI  &rgb_ug RGB_SAI  &rgb_ug RGB_BRI  &rgb_ug RGB_EFF  &sys_reset                                             
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├────────────────┼────────────────┼────────────────┬────────────────┼────────────────┼─────────────┤
             //                                                                        BT clear                                 NOR-NB Hue -     Saturation -     Brightness -     Effect back
-                XXX           XXX           XXX           XXX           XXX           &bt BT_CLR    XXX XXX   ___              &rgb_ug RGB_HUD  &rgb_ug RGB_SAD  &rgb_ug RGB_BRD  &rgb_ug RGB_EFR  &bootloader
+                XXX           XXX           XXX           XXX           XXX           &bt BT_CLR    XXX XXX   &kp PRINTSCREEN  &rgb_ug RGB_HUD  &rgb_ug RGB_SAD  &rgb_ug RGB_BRD  &rgb_ug RGB_EFR  &bootloader
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├────────────────┼────────────────┼────────────────┬────────────────┼────────────────┼─────────────┤
             //                                                                                                Toggle gaming    ENG-US           NOR-NB           COLEMAK  
                 XXX           XXX           XXX           XXX           XXX           XXX                     &tog 8           &sw_eng_us       &sw_nb           &sw_colemak           XXX              XXX
