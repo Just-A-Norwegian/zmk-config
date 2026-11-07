@@ -152,7 +152,7 @@ ZMK_MOD_MORPH(dllr_mr,
             compatible = "zmk,behavior-tap-dance";
             #binding-cells = <0>;
             tapping-term-ms = <200>;
-            bindings = <&magic_shift_hold LSHFT>, <&kp CAPS>;
+            bindings = <&magic_shift_hold LSHFT LSHFT>, <&kp CAPS>;
         };
     };
 };
