@@ -20,31 +20,15 @@
  * │ [28] 29  30  31  32  33       │ │      34  35  36  37  38  [39] │
  * ╰────────────────╮ 40  41  42   │ │      43  44  45 ╭─────────────╯
  *                  ╰──────────────╯ ╰─────────────────╯              */
-#define KEYS_L  0  1  2  3  4  5  6 14 15 16 17 18 19 20 28 29 30 31 32 33
-#define KEYS_R  7  8  9 10 11 12 13 21 22 23 24 25 26 27 34 35 36 37 38 39
-#define THUMBS 40 41 42 43 44 45
-
 #define XXX &none
 #define ___ &trans
 
-/* Left-hand home row mods (GACS order: pinky→index = GUI, ALT, CTRL, SHIFT) */
-ZMK_HOLD_TAP(hml,
+/* Magic Shift: tap = sticky Shift, hold = Shift, double-tap = Caps Lock */
+ZMK_HOLD_TAP(magic_shift_hold,
     flavor = "balanced";
-    tapping-term-ms = <280>;
+    tapping-term-ms = <200>;
     quick-tap-ms = <175>;
-    bindings = <&kp>, <&kp>;
-    hold-trigger-key-positions = <KEYS_R THUMBS>;
-    hold-trigger-on-release;
-)
-
-/* Right-hand home row mods (SCAG order: index→pinky = SHIFT, CTRL, ALT, GUI) */
-ZMK_HOLD_TAP(hmr,
-    flavor = "balanced";
-    tapping-term-ms = <280>;
-    quick-tap-ms = <175>;
-    bindings = <&kp>, <&kp>;
-    hold-trigger-key-positions = <KEYS_L THUMBS>;
-    hold-trigger-on-release;
+    bindings = <&kp>, <&sk>;
 )
 
 /* Thumb layer-tap: hold = momentary layer, tap = keypress */
@@ -163,6 +147,13 @@ ZMK_MOD_MORPH(dllr_mr,
         sk: sticky_key {
             quick-release;
         };
+
+        magic_shift: magic_shift {
+            compatible = "zmk,behavior-tap-dance";
+            #binding-cells = <0>;
+            tapping-term-ms = <200>;
+            bindings = <&magic_shift_hold LSHFT>, <&kp CAPS>;
+        };
     };
 };
 
@@ -220,14 +211,14 @@ ZMK_MOD_MORPH(dllr_mr,
             display-name = "ENG-US";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                XXX           &kp Q         &kp W         &kp F         &kp P         &kp G         XXX XXX   &kp J         &kp L         &kp U         &kp Y         &kp SQT       XXX  
+                &kp LALT      &kp Q         &kp W         &kp F         &kp P         &kp G         XXX XXX   &kp J         &kp L         &kp U         &kp Y         &kp SQT       &kp RALT
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &hml LGUI A   &hml LALT R   &hml LCTRL S  &hml LSHFT T  &kp D         XXX XXX   &kp H         &hmr LSHFT N  &hmr LCTRL E  &hmr LALT I   &hmr LGUI O   XXX
+                &kp LCTRL     &kp A         &kp R         &kp S         &kp T         &kp D         XXX XXX   &kp H         &kp N         &kp E         &kp I         &kp O         &kp RCTRL
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &comma_mr     &dot_mr       &qmark_mr     XXX  
+                &kp LGUI      &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &comma_mr     &dot_mr       &qmark_mr     &kp RGUI
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
-            //                                            CAPS LOCK     NAVIGATION    FUNCTION                SYMBOL        NUMBERS       DELETE
-                                                          &kp CAPS      &tlt 3 SPACE  &tlt 4 TAB              &tlt 5 RET    &tlt_bspc 7 0 &kp DEL
+            //                                            MAGIC SHIFT   NAVIGATION    FUNCTION                SYMBOL        NUMBERS       DELETE
+                                                          &magic_shift  &tlt 3 SPACE  &tlt 4 TAB              &tlt 5 RET    &tlt_bspc 7 0 &kp DEL
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
@@ -238,11 +229,11 @@ ZMK_MOD_MORPH(dllr_mr,
             display-name = "NOR-NB";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                &kp NB_O_SLASH ___          ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           &nb_sqt_mr    ___
+                &kp LALT      ___          ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           &nb_sqt_mr    &kp RALT
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                &kp NB_A_RING ___           ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           ___           ___
+                &kp LCTRL     ___           ___           ___           ___           ___           XXX XXX   ___           ___           ___           ___           ___           &kp RCTRL
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                &kp NB_AE     ___           ___           ___           ___           ___                     ___           ___           &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  ___
+                &kp LGUI      ___           ___           ___           ___           ___                     ___           ___           &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  &kp RGUI
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
                                                           ___           ___           ___                     &tlt 6 RET    ___           ___
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
@@ -255,14 +246,14 @@ ZMK_MOD_MORPH(dllr_mr,
             display-name = "CMK";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-            //  ø(RA+P)       Q             W             E             R             T                       Y             U             I             O             P             (enc)
-                &kp RA(P)     &kp Q         &kp W         &kp E         &kp R         &kp T         XXX XXX   &kp Y         &kp U         &kp I         &kp O         &kp P         ___
+            //  ALT           Q             W             E             R             T                       Y             U             I             O             P             ALT
+                &kp LALT      &kp Q         &kp W         &kp E         &kp R         &kp T         XXX XXX   &kp Y         &kp U         &kp I         &kp O         &kp P         &kp RALT
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-            //  å(RA+W)       A/GUI         S/ALT         D/CTL         F/SFT         G                       H             J/SFT         K/CTL         L/ALT         ;/GUI         (enc)
-                &kp RA(W)     &hml LGUI A   &hml LALT S   &hml LCTRL D  &hml LSHFT F  &kp G         XXX XXX   &kp H         &hmr LSHFT J  &hmr LCTRL K  &hmr LALT L   &hmr LGUI SEMI ___
+            //  CTRL          A             S             D             F             G                       H             J             K             L             ;             CTRL
+                &kp LCTRL     &kp A         &kp S         &kp D         &kp F         &kp G         XXX XXX   &kp H         &kp J         &kp K         &kp L         &kp SEMI      &kp RCTRL
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-            //  æ(RA+Z)       Z             X             C             V             B                       N             M             ,/;           ./:           ?/!
-                &kp RA(Z)     &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp N         &kp M         &comma_mr     &dot_mr       &qmark_mr     ___
+            //  GUI           Z             X             C             V             B                       N             M             ,/;           ./:           ?/!           GUI
+                &kp LGUI      &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp N         &kp M         &comma_mr     &dot_mr       &qmark_mr     &kp RGUI
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            (transparent — fall through to ENG-US layer)
                                                           ___           ___           ___                     ___           ___           ___
