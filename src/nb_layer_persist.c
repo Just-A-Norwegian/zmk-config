@@ -1,20 +1,18 @@
 /*
- * layout_persist.c  (nb_layer_persist.c)
- *
- * Saves the active layout (ENG-US / NOR-NB / Colemak) across power cycles
- * using Zephyr NVS settings.
- *
- *   1. On boot  : reads the saved layout; activates the matching overlay layer.
- *   2. On change: whenever layer 1 (NOR-NB) or layer 9 (Colemak) changes,
- *                 recomputes the current layout and writes it to NVS.
- *
- * Settings key: "layout/mode"  (uint8_t, see enum layout_mode below)
+ * Persists the active typing layout (ENG-US / NOR-NB / Colemak) per Bluetooth
+ * profile using Zephyr settings.
  */
+
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
 
+#include <zmk/ble.h>
 #include <zmk/event_manager.h>
+#include <zmk/events/ble_active_profile_changed.h>
 #include <zmk/events/layer_state_changed.h>
 #include <zmk/keymap.h>
 
@@ -30,56 +28,225 @@ enum layout_mode
     LAYOUT_COLEMAK = 2,
 };
 
-#if IS_ENABLED(CONFIG_SETTINGS)
+#if IS_ENABLED(CONFIG_SETTINGS) && IS_ENABLED(CONFIG_ZMK_BLE)
 
-/* ── Settings: restore saved layout on boot ─────────────────────────────── */
+static enum layout_mode profile_modes[ZMK_BLE_PROFILE_COUNT];
+static bool profile_mode_valid[ZMK_BLE_PROFILE_COUNT];
+static bool profile_mode_dirty[ZMK_BLE_PROFILE_COUNT];
+static bool restoring_mode = false;
+static enum layout_mode restore_target_mode = LAYOUT_NOR_NB;
 
-static enum layout_mode saved_mode = LAYOUT_ENG_US;
-static bool nb_active = false;
-static bool colemak_active = false;
+static enum layout_mode active_layout_mode(void)
+{
+    if (zmk_keymap_layer_active(NB_LAYER))
+    {
+        return LAYOUT_NOR_NB;
+    }
+
+    if (zmk_keymap_layer_active(COLEMAK_LAYER))
+    {
+        return LAYOUT_COLEMAK;
+    }
+
+    return LAYOUT_ENG_US;
+}
+
+static int set_layer_active(uint8_t layer, bool active)
+{
+    return active ? zmk_keymap_layer_activate(layer) : zmk_keymap_layer_deactivate(layer);
+}
+
+static void persist_profile_mode(int profile_index, enum layout_mode mode)
+{
+    if (profile_index < 0 || profile_index >= ZMK_BLE_PROFILE_COUNT)
+    {
+        LOG_ERR("Invalid active Bluetooth profile index: %d", profile_index);
+        return;
+    }
+
+    if (!profile_mode_valid[profile_index] || profile_modes[profile_index] != mode)
+    {
+        profile_modes[profile_index] = mode;
+        profile_mode_valid[profile_index] = true;
+        profile_mode_dirty[profile_index] = true;
+    }
+
+    if (!profile_mode_dirty[profile_index])
+    {
+        return;
+    }
+
+    char setting_name[32];
+    int name_length = snprintf(setting_name, sizeof(setting_name), "layout/profile/%d",
+                               profile_index);
+    if (name_length < 0 || name_length >= (int)sizeof(setting_name))
+    {
+        LOG_ERR("Failed to format Bluetooth profile layout setting name");
+        return;
+    }
+
+    uint8_t value = (uint8_t)mode;
+    int rc = settings_save_one(setting_name, &value, sizeof(value));
+    if (rc < 0)
+    {
+        LOG_ERR("Failed to save layout for Bluetooth profile %d (err %d)", profile_index, rc);
+        return;
+    }
+
+    profile_mode_dirty[profile_index] = false;
+}
+
+static void restore_profile_mode(uint8_t profile_index)
+{
+    if (profile_index >= ZMK_BLE_PROFILE_COUNT)
+    {
+        LOG_ERR("Invalid Bluetooth profile index: %u", (unsigned int)profile_index);
+        return;
+    }
+
+    enum layout_mode mode = profile_mode_valid[profile_index]
+                                ? profile_modes[profile_index]
+                                : LAYOUT_NOR_NB;
+
+    if (active_layout_mode() == mode)
+    {
+        restoring_mode = false;
+        return;
+    }
+
+    restore_target_mode = mode;
+    restoring_mode = true;
+
+    switch (mode)
+    {
+    case LAYOUT_NOR_NB:
+        if (!zmk_keymap_layer_active(NB_LAYER))
+        {
+            int rc = set_layer_active(NB_LAYER, true);
+            if (rc < 0)
+            {
+                LOG_ERR("Failed to activate Norwegian layout layer (err %d)", rc);
+                restoring_mode = false;
+                return;
+            }
+        }
+        if (zmk_keymap_layer_active(COLEMAK_LAYER))
+        {
+            int rc = set_layer_active(COLEMAK_LAYER, false);
+            if (rc < 0)
+            {
+                LOG_ERR("Failed to deactivate Colemak layout layer (err %d)", rc);
+                restoring_mode = false;
+                return;
+            }
+        }
+        break;
+    case LAYOUT_COLEMAK:
+        if (!zmk_keymap_layer_active(COLEMAK_LAYER))
+        {
+            int rc = set_layer_active(COLEMAK_LAYER, true);
+            if (rc < 0)
+            {
+                LOG_ERR("Failed to activate Colemak layout layer (err %d)", rc);
+                restoring_mode = false;
+                return;
+            }
+        }
+        if (zmk_keymap_layer_active(NB_LAYER))
+        {
+            int rc = set_layer_active(NB_LAYER, false);
+            if (rc < 0)
+            {
+                LOG_ERR("Failed to deactivate Norwegian layout layer (err %d)", rc);
+                restoring_mode = false;
+                return;
+            }
+        }
+        break;
+    default:
+        if (zmk_keymap_layer_active(NB_LAYER))
+        {
+            int rc = set_layer_active(NB_LAYER, false);
+            if (rc < 0)
+            {
+                LOG_ERR("Failed to deactivate Norwegian layout layer (err %d)", rc);
+                restoring_mode = false;
+                return;
+            }
+        }
+        if (zmk_keymap_layer_active(COLEMAK_LAYER))
+        {
+            int rc = set_layer_active(COLEMAK_LAYER, false);
+            if (rc < 0)
+            {
+                LOG_ERR("Failed to deactivate Colemak layout layer (err %d)", rc);
+                restoring_mode = false;
+                return;
+            }
+        }
+        break;
+    }
+
+    if (active_layout_mode() == restore_target_mode)
+    {
+        restoring_mode = false;
+    }
+}
 
 static int layout_load_cb(const char *name, size_t len, settings_read_cb read_cb,
                           void *cb_arg)
 {
     const char *next;
-    if (!settings_name_steq(name, "mode", &next) || next)
+    if (!settings_name_steq(name, "profile", &next) || !next || !*next)
     {
         return -ENOENT;
     }
 
-    uint8_t mode;
-    if (len != sizeof(mode))
+    char *end;
+    unsigned long profile_index = strtoul(next, &end, 10);
+    if (end == next || *end != '\0' || profile_index >= ZMK_BLE_PROFILE_COUNT)
+    {
+        return -ENOENT;
+    }
+
+    uint8_t value;
+    if (len != sizeof(value))
     {
         return -EINVAL;
     }
 
-    int rc = read_cb(cb_arg, &mode, sizeof(mode));
+    int rc = read_cb(cb_arg, &value, sizeof(value));
     if (rc < 0)
     {
         return rc;
     }
-
-    saved_mode = (enum layout_mode)mode;
-    switch (saved_mode)
+    if (rc != (int)sizeof(value) || value > LAYOUT_COLEMAK)
     {
-    case LAYOUT_NOR_NB:
-        zmk_keymap_layer_activate(NB_LAYER);
-        nb_active = true;
-        break;
-    case LAYOUT_COLEMAK:
-        zmk_keymap_layer_activate(COLEMAK_LAYER);
-        colemak_active = true;
-        break;
-    default:
-        break; /* LAYOUT_ENG_US: layer 0 is always the base, nothing to do */
+        return -EINVAL;
     }
 
+    profile_modes[profile_index] = (enum layout_mode)value;
+    profile_mode_valid[profile_index] = true;
+    profile_mode_dirty[profile_index] = false;
     return 0;
 }
 
-SETTINGS_STATIC_HANDLER_DEFINE(layout_persist, "layout", NULL, layout_load_cb, NULL, NULL);
+static int layout_commit_cb(void)
+{
+    int profile_index = zmk_ble_active_profile_index();
+    if (profile_index < 0 || profile_index >= ZMK_BLE_PROFILE_COUNT)
+    {
+        LOG_ERR("Invalid active Bluetooth profile index during settings load: %d",
+                profile_index);
+        return -EINVAL;
+    }
 
-/* ── Event listener: save layout whenever NB or Colemak layer changes ────── */
+    restore_profile_mode((uint8_t)profile_index);
+    return 0;
+}
+
+SETTINGS_STATIC_HANDLER_DEFINE(layout_persist, "layout", NULL, layout_load_cb,
+                               layout_commit_cb, NULL);
 
 static int layout_listener(const zmk_event_t *eh)
 {
@@ -89,42 +256,36 @@ static int layout_listener(const zmk_event_t *eh)
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    /* Update our local shadow of each overlay's active state. */
-    if (ev->layer == NB_LAYER)
+    enum layout_mode mode = active_layout_mode();
+    if (restoring_mode)
     {
-        nb_active = ev->state;
-    }
-    else
-    {
-        colemak_active = ev->state;
-    }
-
-    /* Determine the current layout from the shadow state. */
-    enum layout_mode mode;
-    if (nb_active)
-    {
-        mode = LAYOUT_NOR_NB;
-    }
-    else if (colemak_active)
-    {
-        mode = LAYOUT_COLEMAK;
-    }
-    else
-    {
-        mode = LAYOUT_ENG_US;
+        if (mode == restore_target_mode)
+        {
+            restoring_mode = false;
+        }
+        return ZMK_EV_EVENT_BUBBLE;
     }
 
-    if (mode != saved_mode)
-    {
-        saved_mode = mode;
-        uint8_t val = (uint8_t)mode;
-        settings_save_one("layout/mode", &val, sizeof(val));
-    }
-
+    persist_profile_mode(zmk_ble_active_profile_index(), mode);
     return ZMK_EV_EVENT_BUBBLE;
 }
 
 ZMK_LISTENER(layout_persist, layout_listener);
 ZMK_SUBSCRIPTION(layout_persist, zmk_layer_state_changed);
 
-#endif /* IS_ENABLED(CONFIG_SETTINGS) */
+static int profile_listener(const zmk_event_t *eh)
+{
+    const struct zmk_ble_active_profile_changed *ev =
+        as_zmk_ble_active_profile_changed(eh);
+    if (ev != NULL)
+    {
+        restore_profile_mode(ev->index);
+    }
+
+    return ZMK_EV_EVENT_BUBBLE;
+}
+
+ZMK_LISTENER(layout_profile_persist, profile_listener);
+ZMK_SUBSCRIPTION(layout_profile_persist, zmk_ble_active_profile_changed);
+
+#endif /* IS_ENABLED(CONFIG_SETTINGS) && IS_ENABLED(CONFIG_ZMK_BLE) */
