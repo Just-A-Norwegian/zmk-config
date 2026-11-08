@@ -92,6 +92,20 @@ ZMK_MOD_MORPH(nb_sqt_mr,
     bindings = <&kp NB_SQT>, <&kp NB_DQT>;
     mods = <(MOD_LSFT|MOD_RSFT)>;
 )
+
+/* On the Colemak host layout, SEMI types O; use US punctuation keycodes here. */
+ZMK_MOD_MORPH(cmk_comma_mr,
+    bindings = <&kp COMMA>, <&kp SEMI>;
+    mods = <(MOD_LSFT|MOD_RSFT)>;
+)
+ZMK_MOD_MORPH(cmk_dot_mr,
+    bindings = <&kp DOT>, <&kp COLON>;
+    mods = <(MOD_LSFT|MOD_RSFT)>;
+)
+ZMK_MOD_MORPH(cmk_qmark_mr,
+    bindings = <&kp LS(SLASH)>, <&kp EXCL>;
+    mods = <(MOD_LSFT|MOD_RSFT)>;
+)
 /* Dead keys: send dead key + space so Windows outputs the literal character */
 ZMK_MACRO(nb_grave,
     bindings = <&kp NB_GRAVE &kp SPACE>;
@@ -236,13 +250,13 @@ ZMK_MOD_MORPH(dllr_mr,
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
             //  ALT           Q             W             E             R             T                       Y             U             I             O             ' / "         ALT
-                &kp LALT      &kp Q         &kp W         &kp E         &kp R         &kp T         XXX XXX   &kp Y         &kp U         &kp I         &kp O         &nb_sqt_mr    &kp RALT
+                &kp LALT      &kp Q         &kp W         &kp E         &kp R         &kp T         XXX XXX   &kp Y         &kp U         &kp I         &kp O         &kp SQT       &kp RALT
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
             //  CTRL          A             S             D             F             G                       H             J             K             L             o / O         CTRL
-                &kp LCTRL     &kp A         &kp S         &kp D         &kp F         &kp G         XXX XXX   &kp H         &kp J         &kp K         &kp L         &kp O         &kp RCTRL
+                &kp LCTRL     &kp A         &kp S         &kp D         &kp F         &kp G         XXX XXX   &kp H         &kp J         &kp K         &kp L         &kp SEMI      &kp RCTRL
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
             //  GUI           Z             X             C             V             B                       N             M             ,/;           ./:           ?/!           GUI
-                &kp LGUI      &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp N         &kp M         &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  &kp RGUI
+                &kp LGUI      &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp N         &kp M         &cmk_comma_mr &cmk_dot_mr   &cmk_qmark_mr &kp RGUI
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            (transparent — fall through to ENG-US layer)
                                                           ___           ___           ___                     ___           ___           ___
