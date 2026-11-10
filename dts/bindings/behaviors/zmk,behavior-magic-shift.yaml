@@ -1,0 +1,19 @@
+# Copyright (c) 2026 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: Magic Shift behavior with sticky shift, hold shift, and double-tap caps lock
+
+compatible: "zmk,behavior-magic-shift"
+
+include: zero_param.yaml
+
+properties:
+  bindings:
+    type: phandle-array
+    required: true
+  hold-term-ms:
+    type: int
+    default: 200
+  double-tap-ms:
+    type: int
+    default: 250
