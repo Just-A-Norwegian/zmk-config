@@ -47,6 +47,13 @@ ZMK_HOLD_TAP(nav_mt,
     bindings = <&kp>, <&kp>;
 )
 
+/* Tap Delete; hold to select a hand for home-row shortcut modifiers. */
+ZMK_HOLD_TAP(delete_shortcuts,
+    flavor = "hold-preferred";
+    tapping-term-ms = <200>;
+    bindings = <&shortcut_mods>, <&kp>;
+)
+
 // Switch to using to shift instead of holding it down to get the alt buttons (mod morph)
 #define NAV_LEFT  &nav_mt HOME     LEFT  // Tap: left  | Long-tap: start of line.
 #define NAV_RIGHT &nav_mt END      RIGHT // Tap: right | Long-tap: end   of line.
@@ -143,6 +150,13 @@ ZMK_MOD_MORPH(dllr_mr,
             one-shot-term-ms = <1000>;
             bindings = <&kp LSHFT>, <&kp CAPS>;
         };
+
+        shortcut_mods: shortcut_mods {
+            compatible = "zmk,behavior-shortcut-mods";
+            #binding-cells = <0>;
+            bindings = <&kp LGUI>, <&kp LALT>, <&kp LCTRL>, <&kp LSHFT>,
+                       <&kp RSHFT>, <&kp RCTRL>, <&kp RALT>, <&kp RGUI>;
+        };
     };
 };
 
@@ -195,7 +209,7 @@ ZMK_MOD_MORPH(dllr_mr,
                 &kp LGUI      &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  &kp RGUI
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            MAGIC SHIFT   NAVIGATION    FUNCTION                SYMBOL        NUMBERS       DELETE
-                                                          &tlt 4 TAB    &tlt 3 SPACE  &magic_shift          &tlt 5 RET    &tlt_bspc 7 0 &kp DEL
+                                                          &tlt 4 TAB    &tlt 3 SPACE  &magic_shift          &tlt 5 RET    &tlt_bspc 7 0 &delete_shortcuts 0 DEL
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
@@ -350,6 +364,36 @@ ZMK_MOD_MORPH(dllr_mr,
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├────────────────┼────────────────┼────────────────┼────────────────┴────────────────┴─────────────╯
                                                           ___           ___           ___                     ___              ___              ___
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰────────────────┴────────────────┴────────────────╯
+            >;
+        };
+
+        shortcut_select_layer: shortcut_select_layer {
+            display-name = "SHORTCUT SELECT";
+            bindings = <
+                ___           ___           ___           ___           ___           ___           ___ ___   ___           ___           ___           ___           ___           ___
+                ___           &shortcut_mods &shortcut_mods &shortcut_mods &shortcut_mods ___      ___ ___   ___           &shortcut_mods &shortcut_mods &shortcut_mods &shortcut_mods ___
+                ___           ___           ___           ___           ___           ___                     ___           ___           ___           ___           ___           ___
+                ___           ___           ___                     ___           ___           ___
+            >;
+        };
+
+        shortcut_left_layer: shortcut_left_layer {
+            display-name = "SHORTCUT LEFT";
+            bindings = <
+                ___           ___           ___           ___           ___           ___           ___ ___   ___           ___           ___           ___           ___           ___
+                ___           &shortcut_mods &shortcut_mods &shortcut_mods &shortcut_mods ___      ___ ___   ___           ___           ___           ___           ___           ___
+                ___           ___           ___           ___           ___           ___                     ___           ___           ___           ___           ___           ___
+                ___           ___           ___                     ___           ___           ___
+            >;
+        };
+
+        shortcut_right_layer: shortcut_right_layer {
+            display-name = "SHORTCUT RIGHT";
+            bindings = <
+                ___           ___           ___           ___           ___           ___           ___ ___   ___           ___           ___           ___           ___           ___
+                ___           ___           ___           ___           ___           ___           ___ ___   ___           &shortcut_mods &shortcut_mods &shortcut_mods &shortcut_mods ___
+                ___           ___           ___           ___           ___           ___                     ___           ___           ___           ___           ___           ___
+                ___           ___           ___                     ___           ___           ___
             >;
         };
     };

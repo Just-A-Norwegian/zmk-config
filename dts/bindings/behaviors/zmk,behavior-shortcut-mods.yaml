@@ -1,0 +1,13 @@
+# Copyright (c) 2026 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: Select one hand for home-row shortcut modifiers while holding Delete
+
+compatible: "zmk,behavior-shortcut-mods"
+
+include: zero_param.yaml
+
+properties:
+  bindings:
+    type: phandle-array
+    required: true
