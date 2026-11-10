@@ -24,13 +24,11 @@
 #define ___ &trans
 
 /* Magic Shift: tap = sticky Shift, hold = Shift, double-tap = Caps Lock */
-ZMK_HOLD_TAP(magic_shift_hold,
-    flavor = "hold-preferred";
+ZMK_HOLD_TAP(magic_shift,
+    flavor = "tap-preferred";
     tapping-term-ms = <200>;
     quick-tap-ms = <175>;
-    hold-while-undecided;
-    hold-while-undecided-linger;
-    bindings = <&kp>, <&sk>;
+    bindings = <&kp>, <&magic_shift_td>;
 )
 
 /* Thumb layer-tap: hold = momentary layer, tap = keypress */
@@ -150,11 +148,11 @@ ZMK_MOD_MORPH(dllr_mr,
             quick-release;
         };
 
-        magic_shift: magic_shift {
+        magic_shift_td: magic_shift_tap_dance {
             compatible = "zmk,behavior-tap-dance";
             #binding-cells = <0>;
             tapping-term-ms = <200>;
-            bindings = <&magic_shift_hold LSHFT LSHFT>, <&kp CAPS>;
+            bindings = <&sk LSHFT>, <&kp CAPS>;
         };
     };
 };
@@ -208,7 +206,7 @@ ZMK_MOD_MORPH(dllr_mr,
                 &kp LGUI      &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  &kp RGUI
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            MAGIC SHIFT   NAVIGATION    FUNCTION                SYMBOL        NUMBERS       DELETE
-                                                          &tlt 4 TAB    &tlt 3 SPACE  &magic_shift            &tlt 5 RET    &tlt_bspc 7 0 &kp DEL
+                                                          &tlt 4 TAB    &tlt 3 SPACE  &magic_shift LSHFT 0    &tlt 5 RET    &tlt_bspc 7 0 &kp DEL
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
