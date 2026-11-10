@@ -134,19 +134,14 @@ ZMK_MOD_MORPH(dllr_mr,
 
 / {
     behaviors {
-        /* Release sticky-shift on the first key PRESS (not release), so that
-         * fast/rolling typing does not bleed shift into subsequent letters. */
-        sk: sticky_key {
-            quick-release;
-        };
-
-        /* Tap = sticky Shift, hold = Shift, double-tap = Caps Lock. */
+        /* Tap = one-shot Shift, hold = Shift, double-tap = Caps Lock. */
         magic_shift: magic_shift {
             compatible = "zmk,behavior-magic-shift";
             #binding-cells = <0>;
             hold-term-ms = <200>;
             double-tap-ms = <250>;
-            bindings = <&kp LSHFT>, <&sk LSHFT>, <&kp CAPS>;
+            one-shot-term-ms = <1000>;
+            bindings = <&kp LSHFT>, <&kp CAPS>;
         };
     };
 };

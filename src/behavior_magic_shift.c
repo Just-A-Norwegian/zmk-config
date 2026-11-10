@@ -24,10 +24,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 
 #define MAGIC_SHIFT_BINDING_SHIFT 0
-#define MAGIC_SHIFT_BINDING_STICKY 1
-#define MAGIC_SHIFT_BINDING_CAPS 2
-#define MAGIC_SHIFT_BINDING_COUNT 3
-/* Let an on-time second press reach the state machine before committing sticky Shift. */
+#define MAGIC_SHIFT_BINDING_CAPS 1
+#define MAGIC_SHIFT_BINDING_COUNT 2
 #define MAGIC_SHIFT_TIMER_GRACE_MS 20
 
 enum magic_shift_phase {
@@ -35,12 +33,14 @@ enum magic_shift_phase {
     MAGIC_SHIFT_PRESSED,
     MAGIC_SHIFT_WAITING_FOR_SECOND_TAP,
     MAGIC_SHIFT_SECOND_PRESSED,
-    MAGIC_SHIFT_HELD,
+    MAGIC_SHIFT_PENDING_ONE_SHOT,
+    MAGIC_SHIFT_PRESSED_WITH_PENDING,
 };
 
 struct behavior_magic_shift_config {
     uint32_t hold_term_ms;
     uint32_t double_tap_ms;
+    uint32_t one_shot_term_ms;
     struct zmk_behavior_binding bindings[MAGIC_SHIFT_BINDING_COUNT];
 };
 
@@ -51,7 +51,11 @@ struct behavior_magic_shift_data {
     enum magic_shift_phase phase;
     struct zmk_behavior_binding_event key_event;
     int64_t key_pressed_at;
+    int64_t tap_released_at;
     int64_t tap_deadline;
+    int64_t one_shot_deadline;
+    bool shift_active;
+    bool chord_seen;
 };
 
 #define MAGIC_SHIFT_INSTANCE_COUNT DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT)
@@ -89,24 +93,68 @@ static void cancel_tap_timer(struct behavior_magic_shift_data *data) {
     }
 }
 
-static int activate_sticky_shift(struct behavior_magic_shift_data *data, int64_t timestamp) {
+static int set_shift_active(struct behavior_magic_shift_data *data, bool active,
+                            int64_t timestamp) {
+    if (data->shift_active == active) {
+        return 0;
+    }
+
     struct zmk_behavior_binding_event event = action_event(data, timestamp);
-    return tap_binding(&data->config->bindings[MAGIC_SHIFT_BINDING_STICKY], event);
+    int rc = invoke_binding(&data->config->bindings[MAGIC_SHIFT_BINDING_SHIFT], event, active);
+    if (rc >= 0) {
+        data->shift_active = active;
+    }
+    return rc;
 }
 
-static int press_held_shift(struct behavior_magic_shift_data *data, int64_t timestamp) {
-    struct zmk_behavior_binding_event event = action_event(data, timestamp);
-    return invoke_binding(&data->config->bindings[MAGIC_SHIFT_BINDING_SHIFT], event, true);
-}
-
-static int release_held_shift(struct behavior_magic_shift_data *data, int64_t timestamp) {
-    struct zmk_behavior_binding_event event = action_event(data, timestamp);
-    return invoke_binding(&data->config->bindings[MAGIC_SHIFT_BINDING_SHIFT], event, false);
+static int update_shift_state(struct behavior_magic_shift_data *data, int64_t timestamp) {
+    return set_shift_active(data, data->phase != MAGIC_SHIFT_IDLE, timestamp);
 }
 
 static int toggle_caps_lock(struct behavior_magic_shift_data *data, int64_t timestamp) {
     struct zmk_behavior_binding_event event = action_event(data, timestamp);
     return tap_binding(&data->config->bindings[MAGIC_SHIFT_BINDING_CAPS], event);
+}
+
+static int schedule_tap_timer(struct behavior_magic_shift_data *data, int64_t deadline) {
+    int64_t remaining = deadline - k_uptime_get();
+    if (remaining < 0) {
+        remaining = 0;
+    }
+
+    int rc = k_work_reschedule(&data->tap_timer, K_MSEC(remaining));
+    if (rc < 0) {
+        LOG_ERR("Failed to schedule magic-shift tap timer (err %d)", rc);
+    }
+    return rc;
+}
+
+static int start_one_shot_tap(struct behavior_magic_shift_data *data,
+                              struct zmk_behavior_binding_event event) {
+    data->key_event = event;
+    data->tap_released_at = event.timestamp;
+    data->tap_deadline = event.timestamp + data->config->double_tap_ms;
+    data->one_shot_deadline =
+        data->tap_deadline + MAGIC_SHIFT_TIMER_GRACE_MS + data->config->one_shot_term_ms;
+    data->chord_seen = false;
+    data->phase = MAGIC_SHIFT_WAITING_FOR_SECOND_TAP;
+
+    int rc = update_shift_state(data, event.timestamp);
+    if (rc < 0) {
+        data->phase = MAGIC_SHIFT_IDLE;
+        LOG_ERR("Failed to activate one-shot Shift (err %d)", rc);
+        return rc;
+    }
+
+    rc = schedule_tap_timer(data, data->tap_deadline + MAGIC_SHIFT_TIMER_GRACE_MS);
+    if (rc < 0) {
+        data->phase = MAGIC_SHIFT_IDLE;
+        int release_rc = update_shift_state(data, event.timestamp);
+        if (release_rc < 0) {
+            LOG_ERR("Failed to release Shift after timer scheduling error (err %d)", release_rc);
+        }
+    }
+    return rc;
 }
 
 static void magic_shift_tap_timer_handler(struct k_work *work) {
@@ -115,27 +163,58 @@ static void magic_shift_tap_timer_handler(struct k_work *work) {
         CONTAINER_OF(delayable, struct behavior_magic_shift_data, tap_timer);
 
     k_mutex_lock(&data->lock, K_FOREVER);
-    if (data->phase != MAGIC_SHIFT_WAITING_FOR_SECOND_TAP) {
+    if (data->phase != MAGIC_SHIFT_WAITING_FOR_SECOND_TAP &&
+        data->phase != MAGIC_SHIFT_PENDING_ONE_SHOT &&
+        data->phase != MAGIC_SHIFT_PRESSED_WITH_PENDING) {
         k_mutex_unlock(&data->lock);
         return;
     }
 
     int64_t now = k_uptime_get();
-    int64_t remaining = data->tap_deadline - now;
-    if (remaining > 0) {
-        int rc = k_work_reschedule(&data->tap_timer, K_MSEC(remaining));
+    if (data->phase == MAGIC_SHIFT_WAITING_FOR_SECOND_TAP &&
+        now < data->tap_deadline + MAGIC_SHIFT_TIMER_GRACE_MS) {
+        int rc = schedule_tap_timer(data, data->tap_deadline + MAGIC_SHIFT_TIMER_GRACE_MS);
         if (rc < 0) {
-            LOG_ERR("Failed to reschedule magic-shift tap timer (err %d)", rc);
             data->phase = MAGIC_SHIFT_IDLE;
+            int release_rc = update_shift_state(data, now);
+            if (release_rc < 0) {
+                LOG_ERR("Failed to release Shift after timer error (err %d)", release_rc);
+            }
         }
         k_mutex_unlock(&data->lock);
         return;
     }
 
-    data->phase = MAGIC_SHIFT_IDLE;
-    int rc = activate_sticky_shift(data, now);
-    if (rc < 0) {
-        LOG_ERR("Failed to activate sticky Shift (err %d)", rc);
+    if (data->phase == MAGIC_SHIFT_WAITING_FOR_SECOND_TAP) {
+        data->one_shot_deadline = now + data->config->one_shot_term_ms;
+    }
+
+    if (now >= data->one_shot_deadline) {
+        if (data->phase == MAGIC_SHIFT_PRESSED_WITH_PENDING) {
+            data->phase = MAGIC_SHIFT_PRESSED;
+        } else {
+            data->phase = MAGIC_SHIFT_IDLE;
+            int rc = update_shift_state(data, now);
+            if (rc < 0) {
+                LOG_ERR("Failed to release expired one-shot Shift (err %d)", rc);
+            }
+        }
+    } else {
+        if (data->phase == MAGIC_SHIFT_WAITING_FOR_SECOND_TAP) {
+            data->phase = MAGIC_SHIFT_PENDING_ONE_SHOT;
+        }
+        int rc = schedule_tap_timer(data, data->one_shot_deadline);
+        if (rc < 0) {
+            if (data->phase == MAGIC_SHIFT_PRESSED_WITH_PENDING) {
+                data->phase = MAGIC_SHIFT_PRESSED;
+            } else {
+                data->phase = MAGIC_SHIFT_IDLE;
+                int release_rc = update_shift_state(data, now);
+                if (release_rc < 0) {
+                    LOG_ERR("Failed to release Shift after timer error (err %d)", release_rc);
+                }
+            }
+        }
     }
     k_mutex_unlock(&data->lock);
 }
@@ -148,38 +227,45 @@ static int on_magic_shift_binding_pressed(struct zmk_behavior_binding *binding,
     k_mutex_lock(&data->lock, K_FOREVER);
     switch (data->phase) {
     case MAGIC_SHIFT_IDLE:
-        data->key_event = event;
-        data->key_pressed_at = event.timestamp;
         data->phase = MAGIC_SHIFT_PRESSED;
         break;
     case MAGIC_SHIFT_WAITING_FOR_SECOND_TAP: {
-        int64_t elapsed = event.timestamp - data->key_event.timestamp;
+        int64_t elapsed = event.timestamp - data->tap_released_at;
         if (elapsed >= 0 && elapsed <= data->config->double_tap_ms) {
             cancel_tap_timer(data);
-            data->key_event = event;
-            data->key_pressed_at = event.timestamp;
             data->phase = MAGIC_SHIFT_SECOND_PRESSED;
             break;
         }
 
-        cancel_tap_timer(data);
-        int rc = activate_sticky_shift(data, event.timestamp);
-        if (rc < 0) {
-            LOG_ERR("Failed to activate sticky Shift (err %d)", rc);
-        }
-        data->key_event = event;
-        data->key_pressed_at = event.timestamp;
-        data->phase = MAGIC_SHIFT_PRESSED;
+        data->phase = MAGIC_SHIFT_PRESSED_WITH_PENDING;
+        data->one_shot_deadline = event.timestamp + data->config->one_shot_term_ms;
         break;
     }
+    case MAGIC_SHIFT_PENDING_ONE_SHOT:
+        data->phase = MAGIC_SHIFT_PRESSED_WITH_PENDING;
+        break;
     case MAGIC_SHIFT_PRESSED:
     case MAGIC_SHIFT_SECOND_PRESSED:
-    case MAGIC_SHIFT_HELD:
+    case MAGIC_SHIFT_PRESSED_WITH_PENDING:
         LOG_WRN("Ignoring unexpected magic-shift press at position %u", event.position);
-        break;
+        k_mutex_unlock(&data->lock);
+        return ZMK_BEHAVIOR_OPAQUE;
+    }
+
+    data->key_event = event;
+    data->key_pressed_at = event.timestamp;
+    data->chord_seen = false;
+    int rc = update_shift_state(data, event.timestamp);
+    if (rc < 0) {
+        data->phase = MAGIC_SHIFT_IDLE;
+        int release_rc = update_shift_state(data, event.timestamp);
+        if (release_rc < 0) {
+            LOG_ERR("Failed to release Shift after press error (err %d)", release_rc);
+        }
+        LOG_ERR("Failed to activate Shift (err %d)", rc);
     }
     k_mutex_unlock(&data->lock);
-    return ZMK_BEHAVIOR_OPAQUE;
+    return rc < 0 ? rc : ZMK_BEHAVIOR_OPAQUE;
 }
 
 static int on_magic_shift_binding_released(struct zmk_behavior_binding *binding,
@@ -189,44 +275,53 @@ static int on_magic_shift_binding_released(struct zmk_behavior_binding *binding,
     int rc = 0;
 
     k_mutex_lock(&data->lock, K_FOREVER);
+    data->key_event = event;
+    bool is_tap = event.timestamp >= data->key_pressed_at &&
+                  event.timestamp - data->key_pressed_at < data->config->hold_term_ms;
     switch (data->phase) {
-    case MAGIC_SHIFT_PRESSED: {
-        if (event.timestamp - data->key_pressed_at >= data->config->hold_term_ms) {
+    case MAGIC_SHIFT_PRESSED:
+        if (is_tap && !data->chord_seen) {
+            rc = start_one_shot_tap(data, event);
+        } else {
             data->phase = MAGIC_SHIFT_IDLE;
-            break;
-        }
-
-        data->key_event = event;
-        data->phase = MAGIC_SHIFT_WAITING_FOR_SECOND_TAP;
-        data->tap_deadline =
-            event.timestamp + data->config->double_tap_ms + MAGIC_SHIFT_TIMER_GRACE_MS;
-        int64_t remaining = data->tap_deadline - k_uptime_get();
-        if (remaining < 0) {
-            remaining = 0;
-        }
-        rc = k_work_reschedule(&data->tap_timer, K_MSEC(remaining));
-        if (rc < 0) {
-            data->phase = MAGIC_SHIFT_IDLE;
-            LOG_ERR("Failed to schedule magic-shift tap timer (err %d)", rc);
+            cancel_tap_timer(data);
+            rc = update_shift_state(data, event.timestamp);
         }
         break;
-    }
+    case MAGIC_SHIFT_PRESSED_WITH_PENDING:
+        if (data->chord_seen) {
+            data->phase = MAGIC_SHIFT_IDLE;
+            cancel_tap_timer(data);
+            rc = update_shift_state(data, event.timestamp);
+        } else if (is_tap) {
+            rc = start_one_shot_tap(data, event);
+        } else if (k_uptime_get() >= data->one_shot_deadline) {
+            data->phase = MAGIC_SHIFT_IDLE;
+            cancel_tap_timer(data);
+            rc = update_shift_state(data, event.timestamp);
+        } else {
+            data->phase = MAGIC_SHIFT_PENDING_ONE_SHOT;
+            rc = schedule_tap_timer(data, data->one_shot_deadline);
+            if (rc < 0) {
+                data->phase = MAGIC_SHIFT_IDLE;
+                int release_rc = update_shift_state(data, event.timestamp);
+                if (release_rc < 0) {
+                    LOG_ERR("Failed to release Shift after timer error (err %d)", release_rc);
+                }
+            }
+        }
+        break;
     case MAGIC_SHIFT_SECOND_PRESSED:
-        if (event.timestamp - data->key_pressed_at >= data->config->hold_term_ms) {
-            data->phase = MAGIC_SHIFT_IDLE;
-            break;
+        cancel_tap_timer(data);
+        data->phase = MAGIC_SHIFT_IDLE;
+        rc = update_shift_state(data, event.timestamp);
+        if (rc >= 0 && is_tap && !data->chord_seen) {
+            rc = toggle_caps_lock(data, event.timestamp);
         }
-
-        data->key_event = event;
-        data->phase = MAGIC_SHIFT_IDLE;
-        rc = toggle_caps_lock(data, event.timestamp);
-        break;
-    case MAGIC_SHIFT_HELD:
-        data->phase = MAGIC_SHIFT_IDLE;
-        rc = release_held_shift(data, event.timestamp);
         break;
     case MAGIC_SHIFT_IDLE:
     case MAGIC_SHIFT_WAITING_FOR_SECOND_TAP:
+    case MAGIC_SHIFT_PENDING_ONE_SHOT:
         break;
     }
     if (rc < 0) {
@@ -268,35 +363,33 @@ static int magic_shift_position_state_changed_listener(const zmk_event_t *eh) {
 #endif
         };
         if (is_same_key(&data->key_event, &position_event)) {
-            if (data->phase == MAGIC_SHIFT_WAITING_FOR_SECOND_TAP &&
-                event->timestamp - data->key_event.timestamp > data->config->double_tap_ms) {
-                cancel_tap_timer(data);
-                data->phase = MAGIC_SHIFT_IDLE;
-                int rc = activate_sticky_shift(data, event->timestamp);
-                if (rc < 0) {
-                    LOG_ERR("Failed to activate sticky Shift (err %d)", rc);
-                }
-            }
             k_mutex_unlock(&data->lock);
             continue;
         }
 
-        /* Resolve the tap before the next key's keycode event is emitted. */
-        if (data->phase == MAGIC_SHIFT_WAITING_FOR_SECOND_TAP) {
+        /* Shift is armed before this key event; release it after keymap dispatch consumes it. */
+        switch (data->phase) {
+        case MAGIC_SHIFT_PRESSED:
+        case MAGIC_SHIFT_SECOND_PRESSED:
+            data->chord_seen = true;
+            break;
+        case MAGIC_SHIFT_PRESSED_WITH_PENDING:
+            data->chord_seen = true;
+            data->phase = MAGIC_SHIFT_PRESSED;
+            cancel_tap_timer(data);
+            break;
+        case MAGIC_SHIFT_WAITING_FOR_SECOND_TAP:
+        case MAGIC_SHIFT_PENDING_ONE_SHOT: {
             cancel_tap_timer(data);
             data->phase = MAGIC_SHIFT_IDLE;
-            int rc = activate_sticky_shift(data, event->timestamp);
+            int rc = update_shift_state(data, event->timestamp);
             if (rc < 0) {
-                LOG_ERR("Failed to activate sticky Shift (err %d)", rc);
+                LOG_ERR("Failed to consume one-shot Shift (err %d)", rc);
             }
-        } else if (data->phase == MAGIC_SHIFT_PRESSED ||
-                   data->phase == MAGIC_SHIFT_SECOND_PRESSED) {
-            data->phase = MAGIC_SHIFT_HELD;
-            int rc = press_held_shift(data, event->timestamp);
-            if (rc < 0) {
-                data->phase = MAGIC_SHIFT_IDLE;
-                LOG_ERR("Failed to press held Shift (err %d)", rc);
-            }
+            break;
+        }
+        case MAGIC_SHIFT_IDLE:
+            break;
         }
         k_mutex_unlock(&data->lock);
     }
@@ -334,9 +427,9 @@ static int behavior_magic_shift_init(const struct device *dev) {
     static const struct behavior_magic_shift_config behavior_magic_shift_config_##n = {           \
         .hold_term_ms = DT_INST_PROP(n, hold_term_ms),                                             \
         .double_tap_ms = DT_INST_PROP(n, double_tap_ms),                                           \
+        .one_shot_term_ms = DT_INST_PROP(n, one_shot_term_ms),                                     \
         .bindings = {                                                                              \
             ZMK_KEYMAP_EXTRACT_BINDING(MAGIC_SHIFT_BINDING_SHIFT, DT_DRV_INST(n)),                 \
-            ZMK_KEYMAP_EXTRACT_BINDING(MAGIC_SHIFT_BINDING_STICKY, DT_DRV_INST(n)),                \
             ZMK_KEYMAP_EXTRACT_BINDING(MAGIC_SHIFT_BINDING_CAPS, DT_DRV_INST(n)),                  \
         },                                                                                         \
     };                                                                                             \

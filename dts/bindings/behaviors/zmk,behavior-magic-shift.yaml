@@ -1,7 +1,7 @@
 # Copyright (c) 2026 The ZMK Contributors
 # SPDX-License-Identifier: MIT
 
-description: Magic Shift behavior with sticky shift, hold shift, and double-tap caps lock
+description: Magic Shift behavior with one-shot Shift, held Shift, and double-tap Caps Lock
 
 compatible: "zmk,behavior-magic-shift"
 
@@ -17,3 +17,7 @@ properties:
   double-tap-ms:
     type: int
     default: 250
+  one-shot-term-ms:
+    type: int
+    default: 1000
+    description: How long one-shot Shift stays active after the double-tap window closes
