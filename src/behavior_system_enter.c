@@ -352,6 +352,15 @@ static int system_enter_position_state_changed_listener(const zmk_event_t *eh) {
                     }
                 } else if (data->phase == SYSTEM_ENTER_SYSTEM_SELECTED) {
                     data->system_keys_down |= key_mask;
+                } else if (data->phase == SYSTEM_ENTER_NORMAL && data->enter_down &&
+                           !data->magic_shift_down) {
+                    data->enter_event.timestamp = event->timestamp;
+                    int rc = activate_hold_layer(data, data->enter_event);
+                    if (rc < 0) {
+                        LOG_ERR("Failed to activate Enter hold layer on key press (err %d)", rc);
+                    } else {
+                        cancel_timer(data);
+                    }
                 }
             } else {
                 data->system_keys_down &= ~key_mask;
