@@ -1,0 +1,25 @@
+# Copyright (c) 2026 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: Enter behavior that supports Magic Shift and a held System chord
+
+compatible: "zmk,behavior-system-enter"
+
+include: two_param.yaml
+
+properties:
+  bindings:
+    type: phandle-array
+    required: true
+  system-layer:
+    type: phandle
+    required: true
+  tapping-term-ms:
+    type: int
+    default: 200
+  system-chord-term-ms:
+    type: int
+    default: 200
+  first-non-thumb-position:
+    type: int
+    default: 40

@@ -151,6 +151,16 @@ ZMK_MOD_MORPH(dllr_mr,
             bindings = <&kp LSHFT>, <&kp CAPS>;
         };
 
+        system_enter: system_enter {
+            compatible = "zmk,behavior-system-enter";
+            #binding-cells = <2>;
+            bindings = <&mo>, <&kp>;
+            system-layer = <&system_layer>;
+            tapping-term-ms = <200>;
+            system-chord-term-ms = <200>;
+            first-non-thumb-position = <40>;
+        };
+
         shortcut_mods: shortcut_mods {
             compatible = "zmk,behavior-shortcut-mods";
             #binding-cells = <0>;
@@ -166,8 +176,6 @@ ZMK_MOD_MORPH(dllr_mr,
         // Top-row adjacent pairs — positions from the 46-key map above
         // Left side:  2=W  3=F  4=P
         // Right side: 9=L  10=U  11=Y
-
-        combo_system { timeout-ms = <200>; key-positions = <42 43>; bindings = <&mo 9>; layers = <0 1 2>; };
 
         combo_esc  { timeout-ms = <50>; require-prior-idle-ms = <150>; key-positions = <1 2>;   bindings = <&kp ESC>; };
 
@@ -209,7 +217,7 @@ ZMK_MOD_MORPH(dllr_mr,
                 &kp LGUI      &kp Z         &kp X         &kp C         &kp V         &kp B                   &kp K         &kp M         &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  &kp RGUI
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
             //                                            MAGIC SHIFT   NAVIGATION    FUNCTION                SYMBOL        NUMBERS       DELETE
-                                                          &tlt 4 TAB    &tlt 3 SPACE  &magic_shift          &tlt 5 RET    &tlt_bspc 7 0 &delete_shortcuts 0 DEL
+                                                          &tlt 4 TAB    &tlt 3 SPACE  &magic_shift          &system_enter 5 RET    &tlt_bspc 7 0 &delete_shortcuts 0 DEL
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
@@ -226,7 +234,7 @@ ZMK_MOD_MORPH(dllr_mr,
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
                 &kp LGUI      ___           ___           ___           ___           ___                     ___           ___           &nb_comma_mr  &nb_dot_mr    &nb_qmark_mr  &kp RGUI
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
-                                                          ___           ___           ___                     &tlt 6 RET    ___           ___
+                                                          ___           ___           ___                     &system_enter 6 RET    ___           ___
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
             >;
         };
@@ -349,7 +357,7 @@ ZMK_MOD_MORPH(dllr_mr,
             >;
         };
 
-        system_layer {
+        system_layer: system_layer {
             display-name = "SYSTEM";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭────────────────┬────────────────┬────────────────┬────────────────┬────────────────┬─────────────╮
