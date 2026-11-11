@@ -9,7 +9,7 @@ include: two_param.yaml
 
 properties:
   bindings:
-    type: phandle-array
+    type: phandles
     required: true
   system-layer:
     type: phandle
