@@ -266,11 +266,11 @@ ZMK_MOD_MORPH(dllr_mr,
             display-name = "NAV";
             bindings = <
             //╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮         ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                XXX           XXX           XXX           XXX           XXX           XXX           XXX XXX   &kp PG_UP     NAV_BSPC      NAV_UP        NAV_DEL       XXX           XXX   
+                XXX           &kp LC(A)     &kp LC(S)     &kp LC(F)     &kp LC(P)     XXX           XXX XXX   &kp PG_UP     NAV_BSPC      NAV_UP        NAV_DEL       XXX           XXX
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     XXX           XXX XXX   &kp PG_DN     NAV_LEFT      NAV_DOWN      NAV_RIGHT     &kp RET       XXX   
+                XXX           &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     &kp LA(TAB)   XXX XXX   &kp PG_DN     NAV_LEFT      NAV_DOWN      NAV_RIGHT     &kp RET       XXX
             //├─────────────┼─────────────┼─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                XXX           XXX           XXX           XXX           XXX           XXX                     &kp INS       XXX           XXX           XXX           XXX           XXX   
+                XXX           &kp LC(Z)     &kp LC(Y)     &kp LC(C)     &kp LC(V)     &kp LC(X)               &kp INS       XXX           XXX           XXX           XXX           XXX
             //╰─────────────┼─────────────┴─────────────┼─────────────┬─────────────┼─────────────┤         ├─────────────┬─────────────┼─────────────┼─────────────┴───────────────────────────╯
                                                           ___           ___           ___                     ___           ___           ___   
             //                                          ╰─────────────┴─────────────┴─────────────╯         ╰─────────────┴─────────────┴─────────────╯
